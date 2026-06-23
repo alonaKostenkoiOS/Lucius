@@ -1,0 +1,39 @@
+# SwiftLint configuration for Lucius.
+# We keep the substantive correctness/clarity rules and switch off a few
+# opinionated defaults that fight this codebase's deliberate choices.
+
+included:
+  - Lucius
+  - LuciusTests
+
+disabled_rules:
+  # Trailing commas in multi-line literals are intentional — they keep diffs clean.
+  - trailing_comma
+  # "mastered" is core learning-domain vocabulary here, not an exclusion concern.
+  - inclusive_language
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+
+nesting:
+  type_level: 3 # e.g. GenerationRequest.Params.CodingKeys — Codable nesting is idiomatic.
+
+identifier_name:
+  min_length:
+    warning: 1 # design tokens (sm/md/lg) and math locals (x/y/r) are intentional.
+
+type_name:
+  max_length:
+    warning: 50
+
+# A few rules worth opting into for senior-level hygiene.
+# (empty_count is intentionally omitted — our DayActivity.count is an Int field,
+#  not a collection, so `count == 0` checks are correct here.)
+opt_in_rules:
+  - first_where
+  - last_where
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+  - toggle_bool
