@@ -95,6 +95,7 @@ final class ImportWordsViewModel {
         }
 
         try? context.save()
+        WidgetSync.update(context: context)
         Haptics.success()
     }
 

@@ -19,6 +19,8 @@ Lucius is an iOS vocabulary app for language learners who read. Instead of drill
 - **AI memory scenes.** Generate an illustration for any word — on‑device via **Image Playground** (Apple Intelligence) where available, or the free, crowdsourced **AI Horde** network everywhere else.
 - **Import from a book.** Paste a passage or snap a photo of a page; on‑device **Vision** OCR extracts the text, Lucius surfaces the words worth learning, auto‑translates the ones you pick, and schedules them all at once.
 - **Progress that feels alive.** A mastery ring and a GitHub‑style activity heatmap with a day streak, plus a confetti celebration the moment a word is mastered.
+- **Home & Lock Screen widgets.** A WidgetKit extension shows how many words are due and your streak, and recomputes "due" over time from shared review dates — no app launch needed. Tap to deep‑link straight into a review.
+- **Siri & Shortcuts.** App Intents let you add a word hands‑free ("Add a word to Lucius") from Siri, Spotlight or the Shortcuts app.
 - **Pronunciation & translation.** Built‑in speech synthesis and one‑tap translation (system Translation framework on iOS 18+, free network fallback below).
 - **Gentle reminders.** Local notifications fire exactly when a word is due.
 
@@ -28,6 +30,8 @@ Lucius is an iOS vocabulary app for language learners who read. Instead of drill
 | --- | --- |
 | UI | SwiftUI, `@Observable` view models (MVVM) |
 | Persistence | SwiftData (`@Model`, external‑storage image blobs) |
+| Widgets | WidgetKit (Home + Lock Screen), App Group–shared snapshot |
+| Voice / automation | App Intents + App Shortcuts (Siri, Spotlight) |
 | OCR | Vision (`VNRecognizeTextRequest`) |
 | Image generation | Image Playground (on‑device) + AI Horde (network fallback) |
 | Translation | Translation framework (iOS 18+) + MyMemory (fallback, cached) |
@@ -41,13 +45,16 @@ Lucius is an iOS vocabulary app for language learners who read. Instead of drill
 
 ```
 Lucius/
-├── App/            App entry point, ModelContainer setup
+├── App/            App entry point, ModelContainer factory, AppRouter, App Intents
 ├── Models/         SwiftData @Model types + enums (VocabularyWord, ReviewEvent, …)
 ├── ViewModels/     @Observable @MainActor view models
 ├── Services/       Stateless services & singletons (scheduler, OCR, translation,
-│                   image generation, notifications, keychain, haptics)
+│                   image generation, notifications, keychain, haptics, widget sync)
+├── Shared/         Code compiled into both the app and the widget (review snapshot)
 └── Views/          Screens + a reusable Components/ design system
     └── Components/  Theme tokens, buttons, cards, heatmap, celebration, …
+LuciusWidget/       WidgetKit extension (Home + Lock Screen)
+LuciusTests/        Swift Testing unit tests
 ```
 
 A few deliberate choices:

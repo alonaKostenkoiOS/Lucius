@@ -28,6 +28,8 @@ final class WordDetailViewModel {
             celebrate = true
             Haptics.success()
         }
+
+        WidgetSync.update(context: context)
     }
 
     /// Stores the image produced by Image Playground (it hands back a temp file URL).
@@ -63,5 +65,6 @@ final class WordDetailViewModel {
         NotificationService.shared.cancelNotification(for: word)
         context.delete(word)
         try? context.save()
+        WidgetSync.update(context: context)
     }
 }

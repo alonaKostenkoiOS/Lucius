@@ -4,6 +4,7 @@
 
 included:
   - Lucius
+  - LuciusWidget
   - LuciusTests
 
 disabled_rules:

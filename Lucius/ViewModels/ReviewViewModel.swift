@@ -56,5 +56,7 @@ final class ReviewViewModel {
 
         queue.removeFirst()
         isAnswerRevealed = false
+
+        WidgetSync.update(context: context)
     }
 }

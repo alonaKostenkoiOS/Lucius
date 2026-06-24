@@ -1,0 +1,23 @@
+import SwiftUI
+
+/// Drives top-level navigation so external entry points (widget deep links,
+/// Siri shortcuts) can steer the UI — e.g. jumping straight to Review.
+@Observable
+@MainActor
+final class AppRouter {
+    enum Tab: Hashable {
+        case home, review, settings
+    }
+
+    var selectedTab: Tab = .home
+
+    /// Routes an incoming deep link (e.g. `lucius://review`) to a tab.
+    func handle(_ url: URL) {
+        switch url.host {
+        case "review": selectedTab = .review
+        case "home": selectedTab = .home
+        case "settings": selectedTab = .settings
+        default: break
+        }
+    }
+}

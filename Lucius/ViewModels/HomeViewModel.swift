@@ -46,6 +46,8 @@ final class HomeViewModel {
         let summary = Self.activitySummary(reviewDates: events.map(\.date))
         activity = summary.activity
         streak = summary.streak
+
+        WidgetSync.update(context: context)
     }
 
     // MARK: - Pure computation (unit-tested without SwiftData)

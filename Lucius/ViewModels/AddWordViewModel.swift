@@ -38,6 +38,7 @@ final class AddWordViewModel {
         try? context.save()
 
         NotificationService.shared.scheduleReviewNotification(for: newWord)
+        WidgetSync.update(context: context)
         return newWord
     }
 

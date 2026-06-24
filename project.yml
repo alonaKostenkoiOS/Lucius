@@ -19,11 +19,33 @@ targets:
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_FILE: Lucius/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Lucius
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Lucius saves generated scene images to your photo library only when you tap Save.
+        CODE_SIGN_ENTITLEMENTS: Lucius/Lucius.entitlements
+    dependencies:
+      - target: LuciusWidgetExtension
+
+  LuciusWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - LuciusWidget
+      - path: Lucius/Shared/ReviewSnapshot.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lucius.app.widget
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_FILE: LuciusWidget/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Lucius
+        CODE_SIGN_ENTITLEMENTS: LuciusWidget/LuciusWidget.entitlements
 
   LuciusTests:
     type: bundle.unit-test
