@@ -11,6 +11,7 @@ targets:
     platform: iOS
     sources:
       - Lucius
+      - path: LiveTextScannerView.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucius.app
@@ -25,6 +26,7 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Lucius
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Lucius saves generated scene images to your photo library only when you tap Save.
+        INFOPLIST_KEY_NSCameraUsageDescription: Lucius uses the camera to scan printed words you choose to add.
         CODE_SIGN_ENTITLEMENTS: Lucius/Lucius.entitlements
     dependencies:
       - target: LuciusWidgetExtension

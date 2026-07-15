@@ -6,6 +6,7 @@ struct AddWordView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = AddWordViewModel()
+    @State private var isScannerPresented = false
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,13 @@ struct AddWordView: View {
                             SpeakButton(text: viewModel.word)
                         }
                     }
+
+                    Button {
+                        isScannerPresented = true
+                    } label: {
+                        Label("Scan word with camera", systemImage: "text.viewfinder")
+                    }
+                    .accessibilityHint("Opens the camera so you can select printed text")
 
                     TextField("Translation", text: $viewModel.translation)
 
@@ -83,6 +91,13 @@ struct AddWordView: View {
             }
         }
         .tint(.lavender)
+        .sheet(isPresented: $isScannerPresented) {
+            LiveTextScannerView { text in
+                viewModel.applyScannedText(text)
+                Haptics.success()
+            }
+            .preferredColorScheme(.light)
+        }
         // Sheets are separate presentations and don't inherit the
         // root's light appearance, so set it here as well.
         .preferredColorScheme(.light)
