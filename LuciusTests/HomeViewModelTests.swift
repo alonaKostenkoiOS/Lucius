@@ -86,4 +86,21 @@ struct HomeViewModelTests {
         #expect(viewModel.pairs.count == WordMatchViewModel.roundSize)
         #expect(Set(viewModel.pairs.map(\.id)) == Set(viewModel.translationOptions.map(\.id)))
     }
+
+    // MARK: - Vocabulary card presentation
+
+    @Test func reviewCardCreatesCaseInsensitiveContextCloze() {
+        let clue = VocabularyCardText.cloze(
+            example: "Serendipity brought them together.",
+            word: "serendipity"
+        )
+
+        #expect(clue == "______ brought them together.")
+    }
+
+    @Test func reviewCardHidesUnavailableOrUnrelatedContext() {
+        #expect(VocabularyCardText.cloze(example: nil, word: "door") == nil)
+        #expect(VocabularyCardText.cloze(example: "The window opened.", word: "door") == nil)
+        #expect(VocabularyCardText.cloze(example: "The door opened.", word: "  ") == nil)
+    }
 }

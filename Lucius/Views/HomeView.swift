@@ -7,6 +7,7 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var isAddingWord = false
     @State private var isImporting = false
+    @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
 
     var body: some View {
         NavigationStack {
@@ -74,6 +75,13 @@ struct HomeView: View {
                 Text("Remember words. Create scenes.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                Label(
+                    "Learning \(AppLanguageSettings.displayName(for: learningLanguageCode))",
+                    systemImage: "globe"
+                )
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.lavender)
             }
 
             Spacer()

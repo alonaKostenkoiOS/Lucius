@@ -34,7 +34,9 @@ final class HomeViewModel {
         let descriptor = FetchDescriptor<VocabularyWord>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        let allWords = (try? context.fetch(descriptor)) ?? []
+        let fetchedWords = (try? context.fetch(descriptor)) ?? []
+        let languageCode = AppLanguageSettings.learningLanguageCode
+        let allWords = fetchedWords.filter { $0.languageCode == languageCode }
 
         let stats = Self.stats(for: allWords)
         totalWordsCount = stats.total

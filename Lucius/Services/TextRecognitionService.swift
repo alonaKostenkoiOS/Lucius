@@ -31,7 +31,15 @@ enum TextRecognitionService {
 
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            request.recognitionLanguages = ["en-US"]
+            let selectedCode = AppLanguageSettings.learningLanguageCode
+            let supported = (try? request.supportedRecognitionLanguages()) ?? []
+            if let recognitionCode = supported.first(where: {
+                $0 == selectedCode || $0.hasPrefix(selectedCode + "-")
+            }) {
+                request.recognitionLanguages = [recognitionCode]
+            } else {
+                request.automaticallyDetectsLanguage = true
+            }
 
             let handler = VNImageRequestHandler(cgImage: cgImage, orientation: uiImage.cgImageOrientation)
             do {

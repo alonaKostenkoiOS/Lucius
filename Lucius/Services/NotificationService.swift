@@ -5,6 +5,51 @@ import UserNotifications
 enum AppSettingsKeys {
     static let notificationsEnabled = "notificationsEnabled"
     static let aiHordeAPIKey = "aiHordeAPIKey"
+    static let learningLanguageCode = "learningLanguageCode"
+    static let translationLanguageCode = "translationLanguageCode"
+}
+
+struct LanguageOption: Identifiable, Hashable {
+    let code: String
+    let name: String
+
+    var id: String { code }
+}
+
+/// The currently selected language pair, shared by OCR, speech and translation.
+enum AppLanguageSettings {
+    static var learningLanguageCode: String {
+        get { UserDefaults.standard.string(forKey: AppSettingsKeys.learningLanguageCode) ?? "en" }
+        set { UserDefaults.standard.set(newValue, forKey: AppSettingsKeys.learningLanguageCode) }
+    }
+
+    static var translationLanguageCode: String {
+        get {
+            if let saved = UserDefaults.standard.string(forKey: AppSettingsKeys.translationLanguageCode) {
+                return saved
+            }
+            let deviceCode = Locale.current.language.languageCode?.identifier ?? "uk"
+            return deviceCode == learningLanguageCode ? "uk" : deviceCode
+        }
+        set { UserDefaults.standard.set(newValue, forKey: AppSettingsKeys.translationLanguageCode) }
+    }
+
+    static let availableLanguages: [LanguageOption] = {
+        let displayLocale = Locale.current
+        return Locale.isoLanguageCodes
+            .filter { $0.count == 2 && $0 != "und" }
+            .compactMap { code in
+                guard let name = displayLocale.localizedString(forLanguageCode: code) else { return nil }
+                return LanguageOption(code: code, name: name.capitalized(with: displayLocale))
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }()
+
+    static func displayName(for code: String) -> String {
+        availableLanguages.first(where: { $0.code == code })?.name
+            ?? Locale.current.localizedString(forLanguageCode: code)
+            ?? code.uppercased()
+    }
 }
 
 /// Schedules and cancels local review reminders.

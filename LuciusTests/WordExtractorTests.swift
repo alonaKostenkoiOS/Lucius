@@ -52,4 +52,13 @@ struct WordExtractorTests {
         let candidates = WordExtractor.candidates(from: "MAGNIFICENT Cathedral")
         #expect(candidates == ["magnificent", "cathedral"])
     }
+
+    @Test func nonEnglishLanguagesAllowShorterWordsAndSkipEnglishStopwords() {
+        let candidates = WordExtractor.candidates(
+            from: "la casa es muy bonita",
+            languageCode: "es"
+        )
+
+        #expect(candidates == ["la", "casa", "es", "muy", "bonita"])
+    }
 }

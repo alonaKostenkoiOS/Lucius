@@ -6,6 +6,7 @@ struct WordDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: WordDetailViewModel
+    @State private var isMemoryCueExpanded = false
 
     private let generationManager = SceneImageGenerationManager.shared
 
@@ -18,18 +19,7 @@ struct WordDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                header
-
-                if let example = word.example {
-                    infoCard(title: "Example from book", systemImage: "text.quote") {
-                        Text("\u{201C}\(example)\u{201D}")
-                            .font(.body.italic())
-                    }
-                }
-
-                if let visualAssociation = word.visualAssociation {
-                    VisualSceneCard(text: visualAssociation)
-                }
+                learningCard
 
                 sceneImageSection
 
@@ -77,6 +67,45 @@ struct WordDetailView: View {
         } message: {
             Text(generationManager.failureMessage(for: word) ?? "")
         }
+    }
+
+    private var learningCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            VocabularyCardEyebrow(word: word)
+
+            HStack(alignment: .center, spacing: Spacing.md) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(word.word)
+                        .font(.largeWord)
+                        .foregroundStyle(Color.deepPurple)
+
+                    Text(word.translation)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+
+                Spacer()
+
+                SpeakButton(text: word.word, languageCode: word.languageCode)
+            }
+
+            if let example = VocabularyCardText.cleaned(word.example) {
+                VocabularyContextBlock(
+                    text: example,
+                    highlightedWord: word.word,
+                    style: .answer
+                )
+            }
+
+            VocabularyMemoryCueDisclosure(
+                visualAssociation: word.visualAssociation,
+                imageData: nil,
+                associationLineLimit: nil,
+                isExpanded: $isMemoryCueExpanded
+            )
+        }
+        .padding(Spacing.xl)
+        .cardStyle()
     }
 
     /// AI scene image: the stored image with regenerate/remove actions,
@@ -139,25 +168,6 @@ struct WordDetailView: View {
                 generationManager.generateImage(for: word)
             }
         )
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 12) {
-                Text(word.word)
-                    .font(.largeWord)
-
-                SpeakButton(text: word.word)
-
-                Spacer()
-
-                StatusBadge(status: word.reviewStatus)
-            }
-
-            Text(word.translation)
-                .font(.title3)
-                .foregroundStyle(.secondary)
-        }
     }
 
     private var bookCard: some View {

@@ -45,7 +45,12 @@ struct MainTabView: View {
 /// A short exercise that connects saved words with shuffled translations.
 struct WordMatchView: View {
     @Query(sort: \VocabularyWord.createdAt, order: .reverse) private var words: [VocabularyWord]
+    @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
     @State private var viewModel = WordMatchViewModel()
+
+    private var languageWords: [VocabularyWord] {
+        words.filter { $0.languageCode == learningLanguageCode }
+    }
 
     var body: some View {
         NavigationStack {
@@ -65,10 +70,13 @@ struct WordMatchView: View {
             }
             .navigationTitle("Match")
             .onAppear {
-                viewModel.refreshIfNeeded(from: words)
+                viewModel.refreshIfNeeded(from: languageWords)
             }
             .onChange(of: words.map(\.id)) {
-                viewModel.refreshIfNeeded(from: words)
+                viewModel.refreshIfNeeded(from: languageWords)
+            }
+            .onChange(of: learningLanguageCode) {
+                viewModel.startRound(from: languageWords)
             }
         }
         .tint(.lavender)
@@ -188,7 +196,7 @@ struct WordMatchView: View {
                 .foregroundStyle(.green)
 
             PrimaryButton(title: "New round", systemImage: "arrow.clockwise") {
-                viewModel.startRound(from: words)
+                viewModel.startRound(from: languageWords)
             }
         }
         .frame(maxWidth: .infinity)

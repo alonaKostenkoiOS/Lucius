@@ -15,7 +15,10 @@ struct LuciusApp: App {
 
     init() {
         // Reminders are on by default until the user turns them off in Settings.
-        UserDefaults.standard.register(defaults: [AppSettingsKeys.notificationsEnabled: true])
+        UserDefaults.standard.register(defaults: [
+            AppSettingsKeys.notificationsEnabled: true,
+            AppSettingsKeys.learningLanguageCode: "en",
+        ])
 
         modelContainer = ModelContainerFactory.make()
 

@@ -25,6 +25,7 @@ struct AddWordIntent: AppIntent {
         let newWord = VocabularyWord(
             word: trimmedWord,
             translation: (translation ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+            languageCode: AppLanguageSettings.learningLanguageCode,
             difficulty: .medium,
             nextReviewDate: ReviewScheduler.firstReviewDate(for: .medium)
         )

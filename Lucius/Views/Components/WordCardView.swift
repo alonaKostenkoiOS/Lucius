@@ -1,24 +1,30 @@
 import SwiftUI
 
-/// A compact word card for lists: word, translation, book and status badge.
+/// A compact preview of the richer learning card used in review and detail.
 struct WordCardView: View {
     let word: VocabularyWord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(word.word)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            VocabularyCardEyebrow(word: word)
 
-                Spacer()
-
-                StatusBadge(status: word.reviewStatus)
-            }
+            Text(word.word)
+                .font(.cardWord)
+                .foregroundStyle(Color.deepPurple)
+                .lineLimit(1)
 
             Text(word.translation)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+
+            if let example = VocabularyCardText.cleaned(word.example) {
+                Text("\u{201C}\(example)\u{201D}")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .padding(.top, Spacing.xs)
+            }
 
             if let bookTitle = word.bookTitle {
                 Label(bookTitle, systemImage: "book")

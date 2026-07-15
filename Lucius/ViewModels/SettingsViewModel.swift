@@ -18,6 +18,16 @@ final class SettingsViewModel {
         }
     }
 
+    var learningLanguageCode: String {
+        didSet { AppLanguageSettings.learningLanguageCode = learningLanguageCode }
+    }
+
+    var translationLanguageCode: String {
+        didSet { AppLanguageSettings.translationLanguageCode = translationLanguageCode }
+    }
+
+    let availableLanguages = AppLanguageSettings.availableLanguages
+
     private(set) var permissionStatus: UNAuthorizationStatus = .notDetermined
     private(set) var apiKeyStatus: String?
     private(set) var isVerifyingAPIKey = false
@@ -25,6 +35,8 @@ final class SettingsViewModel {
     init() {
         notificationsEnabled = UserDefaults.standard.bool(forKey: AppSettingsKeys.notificationsEnabled)
         aiHordeAPIKey = APIKeyStore.aiHordeKey
+        learningLanguageCode = AppLanguageSettings.learningLanguageCode
+        translationLanguageCode = AppLanguageSettings.translationLanguageCode
     }
 
     var permissionStatusDescription: String {

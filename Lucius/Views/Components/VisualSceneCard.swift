@@ -4,6 +4,7 @@ import SwiftUI
 /// a word is remembered through a small visual story.
 struct VisualSceneCard: View {
     let text: String
+    var lineLimit: Int? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -15,6 +16,7 @@ struct VisualSceneCard: View {
             Text("\u{201C}\(text)\u{201D}")
                 .font(.body.italic())
                 .foregroundStyle(.primary)
+                .lineLimit(lineLimit)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

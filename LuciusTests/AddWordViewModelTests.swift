@@ -50,4 +50,12 @@ struct AddWordViewModelTests {
         #expect(ScannedContextExtractor.contains(searchTerm: "run", in: "They run home."))
         #expect(!ScannedContextExtractor.contains(searchTerm: "run", in: "She was running."))
     }
+
+    @Test func contextSearchSupportsLanguagesWithoutSpacesBetweenWords() {
+        #expect(ScannedContextExtractor.contains(
+            searchTerm: "学生",
+            in: "私は学生です。",
+            languageCode: "ja"
+        ))
+    }
 }

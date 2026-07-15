@@ -166,19 +166,32 @@ enum ScannedContextExtractor {
         return sentences
     }
 
-    static func sentence(containing searchTerm: String, in recognizedText: String) -> String? {
+    static func sentence(
+        containing searchTerm: String,
+        in recognizedText: String,
+        languageCode: String = AppLanguageSettings.learningLanguageCode
+    ) -> String? {
         sentences(in: recognizedText).first { sentence in
-            contains(searchTerm: searchTerm, in: sentence)
+            contains(searchTerm: searchTerm, in: sentence, languageCode: languageCode)
         }
     }
 
-    static func contains(searchTerm: String, in text: String) -> Bool {
+    static func contains(
+        searchTerm: String,
+        in text: String,
+        languageCode: String = AppLanguageSettings.learningLanguageCode
+    ) -> Bool {
         let term = normalized(searchTerm)
         guard !term.isEmpty else { return false }
 
+        let source = normalized(text)
+        let languagesWithoutRequiredWordSpacing: Set<String> = ["zh", "ja", "th", "lo", "km", "my"]
+        if languagesWithoutRequiredWordSpacing.contains(languageCode) {
+            return source.contains(term)
+        }
+
         let pattern = #"(?<!\p{L})"# + NSRegularExpression.escapedPattern(for: term) + #"(?!\p{L})"#
         guard let expression = try? NSRegularExpression(pattern: pattern) else { return false }
-        let source = normalized(text)
         return expression.firstMatch(
             in: source,
             range: NSRange(source.startIndex..., in: source)
@@ -210,8 +223,18 @@ struct DataScannerContainer: UIViewControllerRepresentable {
     }
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
+        let selectedCode = AppLanguageSettings.learningLanguageCode
+        let recognitionCode = DataScannerViewController.supportedTextRecognitionLanguages.first {
+            $0 == selectedCode || $0.hasPrefix(selectedCode + "-")
+        }
+        let recognizedText: DataScannerViewController.RecognizedDataType = if let recognitionCode {
+            .text(languages: [recognitionCode])
+        } else {
+            .text()
+        }
+
         let controller = DataScannerViewController(
-            recognizedDataTypes: [.text()],
+            recognizedDataTypes: [recognizedText],
             qualityLevel: .accurate,
             recognizesMultipleItems: true,
             isHighFrameRateTrackingEnabled: false,

@@ -19,6 +19,7 @@ struct SwipeReviewCard: View {
     /// Set once an answer is committed so a second swipe can't double-answer
     /// during the brief fly-out animation.
     @State private var committed = false
+    @State private var isMemoryCueExpanded = false
 
     private let threshold: CGFloat = 110
 
@@ -48,11 +49,22 @@ struct SwipeReviewCard: View {
                 .opacity(isRevealed ? 1 : 0)
         }
         .frame(maxWidth: .infinity)
-        .padding(Spacing.xxl)
+        .frame(minHeight: 410)
+        .padding(Spacing.xl)
         .background {
             RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                .fill(Color.cardBackground)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white, Color.lavenderSoft.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .elevation(.card)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                .stroke(Color.lavender.opacity(0.14), lineWidth: 1)
         }
         .overlay(swipeOverlay)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
@@ -68,49 +80,65 @@ struct SwipeReviewCard: View {
     }
 
     private var front: some View {
-        VStack(spacing: Spacing.lg) {
-            HStack(spacing: Spacing.md) {
+        VStack(spacing: Spacing.xl) {
+            VocabularyCardEyebrow(word: word)
+
+            Spacer(minLength: Spacing.md)
+
+            VStack(spacing: Spacing.md) {
                 Text(word.word)
                     .font(.heroWord)
                     .multilineTextAlignment(.center)
-                SpeakButton(text: word.word)
+                    .minimumScaleFactor(0.72)
+                    .foregroundStyle(Color.deepPurple)
+
+                SpeakButton(text: word.word, languageCode: word.languageCode)
             }
 
-            Label("Tap to reveal", systemImage: "hand.tap")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            if let clue = VocabularyCardText.cloze(example: word.example, word: word.word) {
+                VocabularyContextBlock(text: clue, highlightedWord: nil, style: .clue)
+            }
+
+            Spacer(minLength: Spacing.sm)
+
+            Label("Tap to reveal meaning", systemImage: "hand.tap")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.lavender)
         }
     }
 
     private var back: some View {
         // Counter-flip so the back reads correctly after the 3D rotation.
-        VStack(spacing: Spacing.md) {
-            HStack(spacing: Spacing.md) {
-                Text(word.word)
-                    .font(.cardWord)
-                SpeakButton(text: word.word)
+        VStack(spacing: Spacing.lg) {
+            VocabularyCardEyebrow(word: word)
+
+            VStack(spacing: Spacing.sm) {
+                HStack(spacing: Spacing.sm) {
+                    Text(word.word)
+                        .font(.cardWord)
+                        .foregroundStyle(Color.deepPurple)
+                    SpeakButton(text: word.word, languageCode: word.languageCode)
+                }
+
+                Text(word.translation)
+                    .font(.title2.weight(.bold))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.primary)
             }
-
-            Divider()
-
-            Text(word.translation)
-                .font(.title3.weight(.medium))
-                .multilineTextAlignment(.center)
 
             if let example = word.example {
-                Text("\u{201C}\(example)\u{201D}")
-                    .font(.subheadline.italic())
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                VocabularyContextBlock(
+                    text: example,
+                    highlightedWord: word.word,
+                    style: .answer
+                )
             }
 
-            if let visualAssociation = word.visualAssociation {
-                VisualSceneCard(text: visualAssociation)
-            }
-
-            if let sceneImageData = word.sceneImageData {
-                SceneImageView(imageData: sceneImageData, height: 180)
-            }
+            VocabularyMemoryCueDisclosure(
+                visualAssociation: word.visualAssociation,
+                imageData: word.sceneImageData,
+                isExpanded: $isMemoryCueExpanded
+            )
 
             Label("Swipe ← forgot · → know it · ↑ almost", systemImage: "hand.draw")
                 .font(.caption)
@@ -216,6 +244,145 @@ struct SwipeReviewCard: View {
         case .forgot: .topLeading
         case .knowIt: .topTrailing
         case .almost: .top
+        }
+    }
+}
+
+// MARK: - Reusable vocabulary presentation
+
+/// Pure text transformations used by card views and unit tests.
+enum VocabularyCardText {
+    static func cloze(example: String?, word: String) -> String? {
+        guard let example = cleaned(example),
+              let word = cleaned(word),
+              let range = example.range(of: word, options: [.caseInsensitive, .diacriticInsensitive])
+        else { return nil }
+
+        return example.replacingCharacters(in: range, with: "______")
+    }
+
+    static func cleaned(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let cleaned = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? nil : cleaned
+    }
+}
+
+/// Small, reusable orientation row used by review and detail cards.
+struct VocabularyCardEyebrow: View {
+    let word: VocabularyWord
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Label(
+                AppLanguageSettings.displayName(for: word.languageCode),
+                systemImage: "globe"
+            )
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.lavender)
+            .lineLimit(1)
+
+            Spacer(minLength: Spacing.sm)
+
+            StatusBadge(status: word.reviewStatus)
+        }
+    }
+}
+
+struct VocabularyContextBlock: View {
+    enum Style: Equatable {
+        case clue
+        case answer
+    }
+
+    let text: String
+    let highlightedWord: String?
+    let style: Style
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Label(
+                style == .clue ? "Context clue" : "In context",
+                systemImage: style == .clue ? "lightbulb" : "text.quote"
+            )
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(style == .clue ? Color.orange : Color.lavender)
+            .textCase(.uppercase)
+
+            Group {
+                if let highlightedWord {
+                    HighlightedVocabularyText(text: text, word: highlightedWord)
+                } else {
+                    Text("\u{201C}\(text)\u{201D}")
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .lineLimit(style == .clue ? 3 : 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
+        .background(
+            style == .clue ? Color.orange.opacity(0.08) : Color.lavenderSoft.opacity(0.72)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Highlights the learned term inside a naturally wrapping sentence.
+private struct HighlightedVocabularyText: View {
+    let text: String
+    let word: String
+
+    var body: some View {
+        if let range = text.range(of: word, options: [.caseInsensitive, .diacriticInsensitive]) {
+            let before = String(text[..<range.lowerBound])
+            let match = String(text[range])
+            let after = String(text[range.upperBound...])
+
+            (Text("\u{201C}\(before)")
+                + Text(match).bold().foregroundColor(.deepPurple)
+                + Text("\(after)\u{201D}"))
+        } else {
+            Text("\u{201C}\(text)\u{201D}")
+        }
+    }
+}
+
+/// Optional imagery stays out of the way until the learner asks for a memory cue.
+struct VocabularyMemoryCueDisclosure: View {
+    let visualAssociation: String?
+    let imageData: Data?
+    var associationLineLimit: Int? = 3
+    var imageHeight: CGFloat = 110
+    @Binding var isExpanded: Bool
+
+    private var association: String? {
+        VocabularyCardText.cleaned(visualAssociation)
+    }
+
+    var body: some View {
+        if association != nil || imageData != nil {
+            DisclosureGroup(isExpanded: $isExpanded) {
+                VStack(spacing: Spacing.md) {
+                    if let association {
+                        VisualSceneCard(text: association, lineLimit: associationLineLimit)
+                    }
+                    if let imageData {
+                        SceneImageView(imageData: imageData, height: imageHeight)
+                    }
+                }
+                .padding(.top, Spacing.md)
+            } label: {
+                Label("Memory cue", systemImage: "sparkles")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.deepPurple)
+            }
+            .padding(Spacing.md)
+            .background(Color.lavenderSoft.opacity(0.45))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         }
     }
 }

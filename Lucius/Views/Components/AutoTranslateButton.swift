@@ -35,7 +35,7 @@ private struct AppleTranslationButton: View {
         Button {
             if configuration == nil {
                 configuration = TranslationSession.Configuration(
-                    source: Locale.Language(identifier: "en"),
+                    source: Locale.Language(identifier: TranslationService.sourceLanguageCode),
                     target: Locale.Language(identifier: TranslationService.targetLanguageCode)
                 )
             } else {
@@ -48,8 +48,13 @@ private struct AppleTranslationButton: View {
         .disabled(sourceText.isEmpty)
         .translationTask(configuration) { session in
             guard !sourceText.isEmpty else { return }
-            if let response = try? await session.translate(sourceText) {
+            do {
+                let response = try await session.translate(sourceText)
                 onTranslation(response.targetText)
+            } catch {
+                if let fallback = try? await TranslationService.shared.translate(sourceText) {
+                    onTranslation(fallback)
+                }
             }
         }
     }

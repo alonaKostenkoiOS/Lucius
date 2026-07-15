@@ -11,6 +11,29 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
+                    Picker("Learning", selection: $viewModel.learningLanguageCode) {
+                        ForEach(viewModel.availableLanguages) { language in
+                            Text(language.name).tag(language.code)
+                        }
+                    }
+
+                    Picker("Translate to", selection: $viewModel.translationLanguageCode) {
+                        ForEach(viewModel.availableLanguages) { language in
+                            Text(language.name).tag(language.code)
+                        }
+                    }
+                } header: {
+                    Text("Languages")
+                } footer: {
+                    if viewModel.learningLanguageCode == viewModel.translationLanguageCode {
+                        Text("Choose two different languages to enable translation.")
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("New words, camera recognition, pronunciation and automatic translation use this language pair.")
+                    }
+                }
+
+                Section {
                     Toggle("Review reminders", isOn: $viewModel.notificationsEnabled)
                         .onChange(of: viewModel.notificationsEnabled) {
                             viewModel.applyNotificationsSetting(context: modelContext)

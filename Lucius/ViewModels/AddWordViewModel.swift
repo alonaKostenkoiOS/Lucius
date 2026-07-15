@@ -12,6 +12,7 @@ final class AddWordViewModel {
     var bookTitle = ""
     var chapter = ""
     var difficulty: WordDifficulty = .medium
+    let languageCode = AppLanguageSettings.learningLanguageCode
 
     var canSave: Bool {
         !trimmed(word).isEmpty && !trimmed(translation).isEmpty
@@ -41,6 +42,7 @@ final class AddWordViewModel {
         let newWord = VocabularyWord(
             word: trimmed(word),
             translation: trimmed(translation),
+            languageCode: languageCode,
             example: optionalValue(example),
             visualAssociation: optionalValue(visualAssociation),
             bookTitle: optionalValue(bookTitle),

@@ -17,7 +17,7 @@ struct AddWordView: View {
                             .textInputAutocapitalization(.never)
 
                         if !viewModel.word.isEmpty {
-                            SpeakButton(text: viewModel.word)
+                            SpeakButton(text: viewModel.word, languageCode: viewModel.languageCode)
                         }
                     }
 

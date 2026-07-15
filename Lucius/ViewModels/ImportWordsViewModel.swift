@@ -46,7 +46,10 @@ final class ImportWordsViewModel {
     /// Loads existing words so already-known vocabulary is filtered out.
     func loadExisting(context: ModelContext) {
         let words = (try? context.fetch(FetchDescriptor<VocabularyWord>())) ?? []
-        existingWords = Set(words.map { $0.word.lowercased() })
+        let languageCode = AppLanguageSettings.learningLanguageCode
+        existingWords = Set(
+            words.filter { $0.languageCode == languageCode }.map { $0.word.lowercased() }
+        )
         recomputeCandidates()
     }
 
@@ -83,6 +86,7 @@ final class ImportWordsViewModel {
             let newWord = VocabularyWord(
                 word: word,
                 translation: translation,
+                languageCode: AppLanguageSettings.learningLanguageCode,
                 bookTitle: book.isEmpty ? nil : book,
                 difficulty: .medium,
                 nextReviewDate: ReviewScheduler.firstReviewDate(for: .medium)
@@ -100,7 +104,11 @@ final class ImportWordsViewModel {
     }
 
     private func recomputeCandidates() {
-        candidates = WordExtractor.candidates(from: sourceText, excluding: existingWords)
+        candidates = WordExtractor.candidates(
+            from: sourceText,
+            excluding: existingWords,
+            languageCode: AppLanguageSettings.learningLanguageCode
+        )
         // Drop selections that are no longer candidates.
         selected = selected.intersection(candidates)
     }

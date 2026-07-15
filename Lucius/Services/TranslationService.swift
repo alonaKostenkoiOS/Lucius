@@ -1,6 +1,6 @@
 import Foundation
 
-/// Translates English words via the free, keyless MyMemory API.
+/// Translates words in the user's selected language pair via MyMemory.
 /// Used as a fallback on devices without the system Translation framework (iOS 18+).
 ///
 /// Results are cached so re-translating the same word is instant and
@@ -23,11 +23,12 @@ struct TranslationService {
         case badResponse
     }
 
-    /// The user's language; English is pointless as a target for an
-    /// English-learning app, so it falls back to Russian.
+    static var sourceLanguageCode: String {
+        AppLanguageSettings.learningLanguageCode
+    }
+
     static var targetLanguageCode: String {
-        let code = Locale.current.language.languageCode?.identifier ?? "ru"
-        return code == "en" ? "ru" : code
+        AppLanguageSettings.translationLanguageCode
     }
 
     private struct MyMemoryResponse: Decodable {
@@ -41,7 +42,11 @@ struct TranslationService {
     private init() {}
 
     func translate(_ text: String) async throws -> String {
-        let cacheKey = "en|\(Self.targetLanguageCode)|\(text.lowercased())"
+        guard Self.sourceLanguageCode != Self.targetLanguageCode else {
+            throw TranslationError.invalidQuery
+        }
+
+        let cacheKey = "\(Self.sourceLanguageCode)|\(Self.targetLanguageCode)|\(text.lowercased())"
         if let cached = await Self.cache.value(for: cacheKey) {
             return cached
         }
@@ -49,7 +54,10 @@ struct TranslationService {
         var components = URLComponents(string: "https://api.mymemory.translated.net/get")
         components?.queryItems = [
             URLQueryItem(name: "q", value: text),
-            URLQueryItem(name: "langpair", value: "en|\(Self.targetLanguageCode)"),
+            URLQueryItem(
+                name: "langpair",
+                value: "\(Self.sourceLanguageCode)|\(Self.targetLanguageCode)"
+            ),
         ]
 
         guard let url = components?.url else {

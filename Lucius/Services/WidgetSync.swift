@@ -7,7 +7,9 @@ import WidgetKit
 enum WidgetSync {
     @MainActor
     static func update(context: ModelContext) {
-        let words = (try? context.fetch(FetchDescriptor<VocabularyWord>())) ?? []
+        let fetchedWords = (try? context.fetch(FetchDescriptor<VocabularyWord>())) ?? []
+        let languageCode = AppLanguageSettings.learningLanguageCode
+        let words = fetchedWords.filter { $0.languageCode == languageCode }
         let events = (try? context.fetch(FetchDescriptor<ReviewEvent>())) ?? []
 
         let stats = HomeViewModel.stats(for: words)

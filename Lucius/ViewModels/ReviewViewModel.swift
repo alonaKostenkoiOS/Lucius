@@ -25,9 +25,12 @@ final class ReviewViewModel {
 
     func loadDueWords(context: ModelContext) {
         let now = Date.now
+        let languageCode = AppLanguageSettings.learningLanguageCode
         let descriptor = FetchDescriptor<VocabularyWord>(
             predicate: #Predicate { word in
-                word.nextReviewDate != nil && (word.nextReviewDate ?? now) <= now
+                word.languageCode == languageCode
+                    && word.nextReviewDate != nil
+                    && (word.nextReviewDate ?? now) <= now
             },
             sortBy: [SortDescriptor(\.nextReviewDate)]
         )

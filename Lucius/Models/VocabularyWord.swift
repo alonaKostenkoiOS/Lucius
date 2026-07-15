@@ -7,6 +7,7 @@ final class VocabularyWord {
     @Attribute(.unique) var id: UUID
     var word: String
     var translation: String
+    var languageCode: String = "en"
     var example: String?
     var visualAssociation: String?
     var bookTitle: String?
@@ -23,6 +24,7 @@ final class VocabularyWord {
         id: UUID = UUID(),
         word: String,
         translation: String,
+        languageCode: String = AppLanguageSettings.learningLanguageCode,
         example: String? = nil,
         visualAssociation: String? = nil,
         bookTitle: String? = nil,
@@ -36,6 +38,7 @@ final class VocabularyWord {
         self.id = id
         self.word = word
         self.translation = translation
+        self.languageCode = languageCode
         self.example = example
         self.visualAssociation = visualAssociation
         self.bookTitle = bookTitle

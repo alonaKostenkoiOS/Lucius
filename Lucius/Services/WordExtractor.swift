@@ -1,4 +1,5 @@
 import Foundation
+import NaturalLanguage
 
 /// Turns a passage of English prose into a short list of candidate words
 /// worth learning: drops punctuation, common stopwords, very short words
@@ -21,18 +22,34 @@ enum WordExtractor {
     static func candidates(
         from text: String,
         excluding existing: Set<String> = [],
-        limit: Int = 60
+        limit: Int = 60,
+        languageCode: String = AppLanguageSettings.learningLanguageCode
     ) -> [String] {
         var seen = Set<String>()
         var result: [String] = []
+        let minimumLength = languageCode == "en" ? 4 : 2
+        let languagesWithoutRequiredWordSpacing: Set<String> = ["zh", "ja", "th", "lo", "km", "my"]
 
-        // Split on anything that isn't a letter or an inner apostrophe.
-        let tokens = text.lowercased().split { !$0.isLetter && $0 != "'" }
+        let tokens: [String]
+        if languagesWithoutRequiredWordSpacing.contains(languageCode) {
+            let tokenizer = NLTokenizer(unit: .word)
+            tokenizer.string = text
+            tokenizer.setLanguage(NLLanguage(rawValue: languageCode))
+            var localizedTokens: [String] = []
+            tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { range, _ in
+                localizedTokens.append(String(text[range]).lowercased())
+                return true
+            }
+            tokens = localizedTokens
+        } else {
+            // Split on anything that isn't a letter or an inner apostrophe.
+            tokens = text.lowercased().split { !$0.isLetter && $0 != "'" }.map(String.init)
+        }
 
         for token in tokens {
             let word = token.trimmingCharacters(in: CharacterSet(charactersIn: "'"))
-            guard word.count >= 4,
-                  !stopwords.contains(word),
+            guard word.count >= minimumLength,
+                  (languageCode != "en" || !stopwords.contains(word)),
                   !existing.contains(word),
                   !seen.contains(word),
                   word.allSatisfy({ $0.isLetter || $0 == "'" })
