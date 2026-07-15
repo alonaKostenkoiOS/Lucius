@@ -11,9 +11,10 @@ struct AddWordViewModelTests {
         #expect(viewModel.word == "piece of cake")
     }
 
-    @Test func recognizedLineOffersIndividualWords() {
-        let words = ScannedWordExtractor.words(in: "A well-known word, necessary word!")
+    @Test func recognizedLinePositionsIndividualCameraWords() {
+        let matches = ScannedWordExtractor.matches(in: "A well-known word, necessary word!")
 
-        #expect(words == ["a", "well-known", "word", "necessary"])
+        #expect(matches.map(\.word) == ["a", "well-known", "word", "necessary", "word"])
+        #expect(matches.map(\.range.location) == [0, 2, 13, 19, 29])
     }
 }
