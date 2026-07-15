@@ -17,6 +17,13 @@ final class AddWordViewModel {
         !trimmed(word).isEmpty && !trimmed(translation).isEmpty
     }
 
+    func applyScannedText(_ text: String) {
+        word = text
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
     /// Saves the word, schedules its first review and a local reminder.
     /// Returns the saved word so the caller can dismiss / navigate.
     @discardableResult
