@@ -6,7 +6,7 @@ import SwiftUI
 @MainActor
 final class AppRouter {
     enum Tab: Hashable {
-        case home, review, settings
+        case home, review, match, settings
     }
 
     var selectedTab: Tab = .home
@@ -15,6 +15,7 @@ final class AppRouter {
     func handle(_ url: URL) {
         switch url.host {
         case "review": selectedTab = .review
+        case "match": selectedTab = .match
         case "home": selectedTab = .home
         case "settings": selectedTab = .settings
         default: break

@@ -60,4 +60,30 @@ struct HomeViewModelTests {
         let todayCell = summary.activity.first { calendar.isDate($0.date, inSameDayAs: today) }
         #expect(todayCell?.count == 2)
     }
+
+    // MARK: - Word matching
+
+    @Test func matchingPairsExcludeAmbiguousDuplicateTranslations() {
+        let words = [
+            VocabularyWord(word: "door", translation: "двері"),
+            VocabularyWord(word: "gate", translation: "двері"),
+            VocabularyWord(word: "window", translation: "вікно"),
+        ]
+
+        let pairs = WordMatchViewModel.eligiblePairs(from: words)
+
+        #expect(pairs.map(\.word) == ["door", "window"])
+    }
+
+    @Test func matchingRoundUsesTheSameFivePairsOnBothSides() {
+        let words = (0..<8).map {
+            VocabularyWord(word: "word\($0)", translation: "translation\($0)")
+        }
+        let viewModel = WordMatchViewModel()
+
+        viewModel.startRound(from: words)
+
+        #expect(viewModel.pairs.count == WordMatchViewModel.roundSize)
+        #expect(Set(viewModel.pairs.map(\.id)) == Set(viewModel.translationOptions.map(\.id)))
+    }
 }
