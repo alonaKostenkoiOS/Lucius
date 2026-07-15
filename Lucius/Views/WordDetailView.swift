@@ -63,7 +63,9 @@ struct WordDetailView: View {
         .alert(
             "Couldn't generate the image",
             isPresented: Binding(
-                get: { generationManager.failureMessage(for: word) != nil },
+                get: {
+                    AppFeatures.imageGenerationEnabled && generationManager.failureMessage(for: word) != nil
+                },
                 set: { isPresented in
                     if !isPresented {
                         generationManager.clearFailure(for: word)
@@ -87,7 +89,9 @@ struct WordDetailView: View {
                 SceneImageView(imageData: sceneImageData)
 
                 HStack(spacing: 12) {
-                    generationButton(title: "Again")
+                    if AppFeatures.imageGenerationEnabled {
+                        generationButton(title: "Again")
+                    }
 
                     Button {
                         Task { await viewModel.saveSceneImageToPhotos() }
@@ -117,7 +121,7 @@ struct WordDetailView: View {
                     }
                 }
             }
-        } else {
+        } else if AppFeatures.imageGenerationEnabled {
             generationButton(title: "Generate scene image")
         }
     }

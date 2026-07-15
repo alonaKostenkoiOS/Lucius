@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftData
 
+/// Features that are implemented but not ready to expose in the app yet.
+enum AppFeatures {
+    static let imageGenerationEnabled = false
+}
+
 @main
 struct LuciusApp: App {
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false

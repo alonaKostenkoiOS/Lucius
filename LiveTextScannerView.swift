@@ -2,17 +2,38 @@
 // Adds a live camera text scanning sheet using VisionKit's DataScanner.
 
 import Foundation
+import NaturalLanguage
 import SwiftUI
 import UIKit
 import Vision
 import VisionKit
+
+enum LiveTextScannerSelectionMode: Equatable {
+    case word
+    case context
+
+    var title: String {
+        switch self {
+        case .word: "Scan word"
+        case .context: "Scan context"
+        }
+    }
+
+    var instruction: String {
+        switch self {
+        case .word: "Tap a word on the camera preview to add it"
+        case .context: "Keep the word and its sentence in view"
+        }
+    }
+}
 
 @available(iOS 16.0, *)
 struct LiveTextScannerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isScanning = true
 
-    /// Called when the user taps a highlighted text item.
+    var selectionMode: LiveTextScannerSelectionMode = .word
+    var searchWord: String?
     var onSelection: (String) -> Void
 
     private var isScannerAvailable: Bool {
@@ -23,7 +44,11 @@ struct LiveTextScannerView: View {
         NavigationStack {
             Group {
                 if isScannerAvailable {
-                    DataScannerContainer(isScanning: $isScanning) { text in
+                    DataScannerContainer(
+                        isScanning: $isScanning,
+                        selectionMode: selectionMode,
+                        searchWord: searchWord
+                    ) { text in
                         onSelection(text)
                         dismiss()
                     }
@@ -40,17 +65,21 @@ struct LiveTextScannerView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Live scan")
+            .navigationTitle(selectionMode.title)
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
                 if isScannerAvailable {
-                    Label("Tap a word on the camera preview to add it", systemImage: "hand.tap")
-                        .font(.subheadline.weight(.medium))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity)
-                        .background(.ultraThinMaterial)
+                    if selectionMode == .context {
+                        contextControls
+                    } else {
+                        Label(selectionMode.instruction, systemImage: "hand.tap")
+                            .font(.subheadline.weight(.medium))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(.ultraThinMaterial)
+                    }
                 }
             }
             .toolbar {
@@ -59,6 +88,32 @@ struct LiveTextScannerView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var contextControls: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .controlSize(.large)
+
+            Text("We are searching for context")
+                .font(.headline)
+
+            if let searchWord, !searchWord.isEmpty {
+                Text("Looking for “\(searchWord)” and the sentence containing it.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Text(selectionMode.instruction)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial)
     }
 }
 
@@ -86,13 +141,72 @@ enum ScannedWordExtractor {
 
 }
 
+/// Splits recognized camera text into complete, unique sentence candidates.
+enum ScannedContextExtractor {
+    static func sentences(in recognizedText: String) -> [String] {
+        let text = recognizedText
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        guard !text.isEmpty else { return [] }
+
+        let tokenizer = NLTokenizer(unit: .sentence)
+        tokenizer.string = text
+        var seen = Set<String>()
+        var sentences: [String] = []
+        tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { range, _ in
+            let sentence = String(text[range])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if sentence.split(whereSeparator: \.isWhitespace).count >= 2,
+               seen.insert(sentence).inserted {
+                sentences.append(sentence)
+            }
+            return true
+        }
+        return sentences
+    }
+
+    static func sentence(containing searchTerm: String, in recognizedText: String) -> String? {
+        sentences(in: recognizedText).first { sentence in
+            contains(searchTerm: searchTerm, in: sentence)
+        }
+    }
+
+    static func contains(searchTerm: String, in text: String) -> Bool {
+        let term = normalized(searchTerm)
+        guard !term.isEmpty else { return false }
+
+        let pattern = #"(?<!\p{L})"# + NSRegularExpression.escapedPattern(for: term) + #"(?!\p{L})"#
+        guard let expression = try? NSRegularExpression(pattern: pattern) else { return false }
+        let source = normalized(text)
+        return expression.firstMatch(
+            in: source,
+            range: NSRange(source.startIndex..., in: source)
+        ) != nil
+    }
+
+    private static func normalized(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "’", with: "'")
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 @available(iOS 16.0, *)
 struct DataScannerContainer: UIViewControllerRepresentable {
     @Binding var isScanning: Bool
+    var selectionMode: LiveTextScannerSelectionMode
+    var searchWord: String?
     var onRecognized: (String) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onRecognized: onRecognized)
+        Coordinator(
+            selectionMode: selectionMode,
+            searchWord: searchWord,
+            onRecognized: onRecognized
+        )
     }
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
@@ -126,16 +240,27 @@ struct DataScannerContainer: UIViewControllerRepresentable {
 
     final class Coordinator: NSObject, DataScannerViewControllerDelegate, UIGestureRecognizerDelegate {
         private let onRecognized: (String) -> Void
+        private let selectionMode: LiveTextScannerSelectionMode
+        private let searchWord: String
         private weak var scanner: DataScannerViewController?
         private var recognizedItems: [RecognizedItem] = []
         private var tapRecognizer: UITapGestureRecognizer?
+        private var isCapturingContext = false
+        private var lastCaptureAttempt = Date.distantPast
 
-        init(onRecognized: @escaping (String) -> Void) {
+        init(
+            selectionMode: LiveTextScannerSelectionMode,
+            searchWord: String?,
+            onRecognized: @escaping (String) -> Void
+        ) {
+            self.selectionMode = selectionMode
+            self.searchWord = searchWord?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             self.onRecognized = onRecognized
         }
 
         func attach(to scanner: DataScannerViewController) {
             self.scanner = scanner
+            guard selectionMode == .word else { return }
             let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
             recognizer.cancelsTouchesInView = false
             recognizer.delegate = self
@@ -157,6 +282,7 @@ struct DataScannerContainer: UIViewControllerRepresentable {
             allItems: [RecognizedItem]
         ) {
             recognizedItems = allItems
+            searchForContextIfNeeded(using: dataScanner)
         }
 
         func dataScanner(
@@ -165,6 +291,7 @@ struct DataScannerContainer: UIViewControllerRepresentable {
             allItems: [RecognizedItem]
         ) {
             recognizedItems = allItems
+            searchForContextIfNeeded(using: dataScanner)
         }
 
         func dataScanner(
@@ -173,6 +300,43 @@ struct DataScannerContainer: UIViewControllerRepresentable {
             allItems: [RecognizedItem]
         ) {
             recognizedItems = allItems
+            searchForContextIfNeeded(using: dataScanner)
+        }
+
+        private func searchForContextIfNeeded(using dataScanner: DataScannerViewController) {
+            guard selectionMode == .context,
+                  !searchWord.isEmpty,
+                  !isCapturingContext,
+                  Date().timeIntervalSince(lastCaptureAttempt) >= 1.5
+            else { return }
+
+            let liveText = recognizedItems.compactMap { item -> String? in
+                guard case .text(let textItem) = item else { return nil }
+                return textItem.transcript
+            }.joined(separator: "\n")
+            guard ScannedContextExtractor.contains(searchTerm: searchWord, in: liveText) else { return }
+
+            isCapturingContext = true
+            lastCaptureAttempt = Date()
+            Task { [weak self, weak dataScanner] in
+                guard let self, let dataScanner else { return }
+
+                var capturedSentence: String?
+                if let image = try? await dataScanner.capturePhoto(),
+                   let data = image.jpegData(compressionQuality: 0.95),
+                   let text = try? await TextRecognitionService.recognizeText(in: data) {
+                    capturedSentence = ScannedContextExtractor.sentence(
+                        containing: searchWord,
+                        in: text
+                    )
+                }
+
+                if let sentence = capturedSentence {
+                    onRecognized(sentence)
+                } else {
+                    isCapturingContext = false
+                }
+            }
         }
 
         func gestureRecognizer(
@@ -314,12 +478,13 @@ struct DataScannerContainer: UIViewControllerRepresentable {
         private func distance(from first: CGPoint, to second: CGPoint) -> CGFloat {
             hypot(second.x - first.x, second.y - first.y)
         }
+
     }
 }
 
 #if DEBUG
 @available(iOS 16.0, *)
 #Preview {
-    LiveTextScannerView { _ in }
+    LiveTextScannerView(selectionMode: .word, searchWord: nil) { _ in }
 }
 #endif

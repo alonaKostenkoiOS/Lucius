@@ -18,7 +18,15 @@ final class AddWordViewModel {
     }
 
     func applyScannedText(_ text: String) {
-        word = text
+        word = normalizedScannedText(text)
+    }
+
+    func applyScannedContext(_ text: String) {
+        example = normalizedScannedText(text)
+    }
+
+    private func normalizedScannedText(_ text: String) -> String {
+        text
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .joined(separator: " ")

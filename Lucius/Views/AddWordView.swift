@@ -6,7 +6,7 @@ struct AddWordView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = AddWordViewModel()
-    @State private var isScannerPresented = false
+    @State private var scannerTarget: ScannerTarget?
 
     var body: some View {
         NavigationStack {
@@ -22,7 +22,7 @@ struct AddWordView: View {
                     }
 
                     Button {
-                        isScannerPresented = true
+                        scannerTarget = .word
                     } label: {
                         Label("Scan word with camera", systemImage: "text.viewfinder")
                     }
@@ -38,6 +38,14 @@ struct AddWordView: View {
                 Section {
                     TextField("Example from book", text: $viewModel.example, axis: .vertical)
                         .lineLimit(2...4)
+
+                    Button {
+                        scannerTarget = .context
+                    } label: {
+                        Label("Scan context with camera", systemImage: "camera.viewfinder")
+                    }
+                    .accessibilityHint("Searches camera text for the word and captures its sentence")
+                    .disabled(viewModel.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 } header: {
                     Text("Context")
                 }
@@ -91,9 +99,17 @@ struct AddWordView: View {
             }
         }
         .tint(.lavender)
-        .sheet(isPresented: $isScannerPresented) {
-            LiveTextScannerView { text in
-                viewModel.applyScannedText(text)
+        .sheet(item: $scannerTarget) { target in
+            LiveTextScannerView(
+                selectionMode: target.selectionMode,
+                searchWord: target == .context ? viewModel.word : nil
+            ) { text in
+                switch target {
+                case .word:
+                    viewModel.applyScannedText(text)
+                case .context:
+                    viewModel.applyScannedContext(text)
+                }
                 Haptics.success()
             }
             .preferredColorScheme(.light)
@@ -106,6 +122,20 @@ struct AddWordView: View {
     private func saveWord() {
         guard viewModel.save(context: modelContext) != nil else { return }
         dismiss()
+    }
+
+    private enum ScannerTarget: String, Identifiable {
+        case word
+        case context
+
+        var id: String { rawValue }
+
+        var selectionMode: LiveTextScannerSelectionMode {
+            switch self {
+            case .word: .word
+            case .context: .context
+            }
+        }
     }
 }
 
