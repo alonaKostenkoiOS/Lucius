@@ -48,7 +48,12 @@ final class ReviewViewModel {
         guard let word = currentWord else { return }
 
         let outcome = ReviewScheduler.apply(answer, to: word)
-        context.insert(ReviewEvent(wasCorrect: answer == .knowIt))
+        context.insert(ReviewEvent(
+            wasCorrect: answer == .knowIt,
+            wordID: word.id,
+            languageCode: word.languageCode,
+            answerRawValue: answer.rawValue
+        ))
         try? context.save()
         NotificationService.shared.scheduleReviewNotification(for: word)
 
