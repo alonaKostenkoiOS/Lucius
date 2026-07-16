@@ -13,18 +13,31 @@ final class ReviewEvent {
     var wordID: UUID?
     var languageCode: String?
     var answerRawValue: String?
+    /// Optional context-review metadata. Nil values keep legacy events readable.
+    var contextReviewModeRawValue: String?
+    var responseTime: TimeInterval?
+    var responseText: String?
+    var reviewPracticeModeRawValue: String?
 
     init(
         date: Date = .now,
         wasCorrect: Bool,
         wordID: UUID? = nil,
         languageCode: String? = nil,
-        answerRawValue: String? = nil
+        answerRawValue: String? = nil,
+        contextReviewModeRawValue: String? = nil,
+        responseTime: TimeInterval? = nil,
+        responseText: String? = nil,
+        reviewPracticeModeRawValue: String? = nil
     ) {
         self.date = date
         self.wasCorrect = wasCorrect
         self.wordID = wordID
         self.languageCode = languageCode
         self.answerRawValue = answerRawValue
+        self.contextReviewModeRawValue = contextReviewModeRawValue
+        self.responseTime = responseTime
+        self.responseText = responseText
+        self.reviewPracticeModeRawValue = reviewPracticeModeRawValue
     }
 }
