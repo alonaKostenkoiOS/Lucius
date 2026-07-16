@@ -1,7 +1,7 @@
 import Foundation
 
 /// How the user answered during a review.
-enum ReviewAnswer {
+enum ReviewAnswer: String {
     case knowIt
     case almost
     case forgot
@@ -40,6 +40,7 @@ enum ReviewScheduler {
 
         switch answer {
         case .forgot:
+            word.mistakeCount += 1
             word.reviewStatus = .learning
             word.nextReviewDate = now.addingTimeInterval(thirtyMinutes)
 
@@ -48,6 +49,7 @@ enum ReviewScheduler {
             word.nextReviewDate = now.addingTimeInterval(oneDay)
 
         case .knowIt:
+            word.successfulReviewCount += 1
             switch word.reviewStatus {
             case .new, .learning:
                 word.reviewStatus = .familiar
@@ -59,6 +61,9 @@ enum ReviewScheduler {
         }
 
         word.updatedAt = now
+        if !wasMastered, word.reviewStatus == .mastered, word.firstMasteredAt == nil {
+            word.firstMasteredAt = now
+        }
         return ReviewOutcome(didReachMastered: !wasMastered && word.reviewStatus == .mastered)
     }
 }

@@ -17,6 +17,10 @@ final class VocabularyWord {
     var nextReviewDate: Date?
     var createdAt: Date
     var updatedAt: Date
+    /// Additive analytics counters. Defaults preserve existing SwiftData stores.
+    var mistakeCount: Int = 0
+    var successfulReviewCount: Int = 0
+    var firstMasteredAt: Date?
     /// AI-generated scene image (Image Playground), stored outside the database.
     @Attribute(.externalStorage) var sceneImageData: Data?
 
@@ -33,7 +37,10 @@ final class VocabularyWord {
         reviewStatus: ReviewStatus = .new,
         nextReviewDate: Date? = nil,
         createdAt: Date = .now,
-        updatedAt: Date = .now
+        updatedAt: Date = .now,
+        mistakeCount: Int = 0,
+        successfulReviewCount: Int = 0,
+        firstMasteredAt: Date? = nil
     ) {
         self.id = id
         self.word = word
@@ -48,6 +55,9 @@ final class VocabularyWord {
         self.nextReviewDate = nextReviewDate
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.mistakeCount = mistakeCount
+        self.successfulReviewCount = successfulReviewCount
+        self.firstMasteredAt = firstMasteredAt
     }
 
     /// A word is due when its scheduled review moment has passed.

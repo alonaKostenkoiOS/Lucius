@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Root navigation: Home, Review, Match and Settings tabs.
+/// Root navigation: Home, Review, Match, Insights and Settings tabs.
 struct MainTabView: View {
     @Environment(AppRouter.self) private var router
 
@@ -26,6 +26,12 @@ struct MainTabView: View {
                     Label("Match", systemImage: "arrow.left.arrow.right.circle")
                 }
                 .tag(AppRouter.Tab.match)
+
+            VocabularyInsightsView()
+                .tabItem {
+                    Label("Insights", systemImage: "chart.bar.xaxis")
+                }
+                .tag(AppRouter.Tab.insights)
 
             SettingsView()
                 .tabItem {
