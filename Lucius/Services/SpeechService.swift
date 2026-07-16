@@ -8,6 +8,12 @@ final class SpeechService {
 
     private init() {}
 
+    /// Listening exercises are offered only when iOS has a voice for the language.
+    func isAvailable(languageCode: String) -> Bool {
+        AVSpeechSynthesisVoice(language: languageCode) != nil
+            || AVSpeechSynthesisVoice(language: Locale(identifier: languageCode).identifier) != nil
+    }
+
     func speak(_ text: String, languageCode: String = AppLanguageSettings.learningLanguageCode) {
         // Make pronunciation audible even when the silent switch is on.
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])

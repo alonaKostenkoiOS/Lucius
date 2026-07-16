@@ -6,7 +6,6 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = HomeViewModel()
     @State private var isAddingWord = false
-    @State private var isImporting = false
     @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
 
     var body: some View {
@@ -31,19 +30,6 @@ struct HomeView: View {
                         isAddingWord = true
                     }
 
-                    Button {
-                        Haptics.tap()
-                        isImporting = true
-                    } label: {
-                        Label("Import from a book", systemImage: "text.viewfinder")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.lavender)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, Spacing.md)
-                            .background(Color.lavenderSoft)
-                            .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
-                    }
-
                     recentWordsSection
                 }
                 .padding(.horizontal, 20)
@@ -56,9 +42,6 @@ struct HomeView: View {
             }
             .sheet(isPresented: $isAddingWord, onDismiss: refresh) {
                 AddWordView()
-            }
-            .sheet(isPresented: $isImporting, onDismiss: refresh) {
-                ImportWordsView()
             }
             .onAppear(perform: refresh)
         }

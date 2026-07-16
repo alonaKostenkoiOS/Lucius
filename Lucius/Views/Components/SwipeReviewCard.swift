@@ -253,12 +253,7 @@ struct SwipeReviewCard: View {
 /// Pure text transformations used by card views and unit tests.
 enum VocabularyCardText {
     static func cloze(example: String?, word: String) -> String? {
-        guard let example = cleaned(example),
-              let word = cleaned(word),
-              let range = example.range(of: word, options: [.caseInsensitive, .diacriticInsensitive])
-        else { return nil }
-
-        return example.replacingCharacters(in: range, with: "______")
+        ContextReviewText.cloze(sentence: example, word: word)
     }
 
     static func cleaned(_ value: String?) -> String? {

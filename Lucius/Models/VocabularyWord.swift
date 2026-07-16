@@ -21,6 +21,9 @@ final class VocabularyWord {
     var mistakeCount: Int = 0
     var successfulReviewCount: Int = 0
     var firstMasteredAt: Date?
+    /// Context-review data is additive so existing stores migrate without losing cards.
+    var usageCount: Int = 0
+    var savedUsageSentencesData: Data?
     /// AI-generated scene image (Image Playground), stored outside the database.
     @Attribute(.externalStorage) var sceneImageData: Data?
 
@@ -40,7 +43,9 @@ final class VocabularyWord {
         updatedAt: Date = .now,
         mistakeCount: Int = 0,
         successfulReviewCount: Int = 0,
-        firstMasteredAt: Date? = nil
+        firstMasteredAt: Date? = nil,
+        usageCount: Int = 0,
+        savedUsageSentencesData: Data? = nil
     ) {
         self.id = id
         self.word = word
@@ -58,11 +63,28 @@ final class VocabularyWord {
         self.mistakeCount = mistakeCount
         self.successfulReviewCount = successfulReviewCount
         self.firstMasteredAt = firstMasteredAt
+        self.usageCount = usageCount
+        self.savedUsageSentencesData = savedUsageSentencesData
     }
 
     /// A word is due when its scheduled review moment has passed.
     var isDueForReview: Bool {
         guard let nextReviewDate else { return false }
         return nextReviewDate <= .now
+    }
+
+    /// Sentences created during the Use exercise, kept as JSON in the existing word row.
+    var savedUsageSentences: [String] {
+        guard let savedUsageSentencesData else { return [] }
+        return (try? JSONDecoder().decode([String].self, from: savedUsageSentencesData)) ?? []
+    }
+
+    func saveUsageSentence(_ sentence: String) {
+        var sentences = savedUsageSentences
+        guard !sentences.contains(where: {
+            $0.localizedCaseInsensitiveCompare(sentence) == .orderedSame
+        }) else { return }
+        sentences.append(sentence)
+        savedUsageSentencesData = try? JSONEncoder().encode(sentences)
     }
 }

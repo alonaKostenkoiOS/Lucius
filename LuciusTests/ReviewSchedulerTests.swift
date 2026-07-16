@@ -25,6 +25,7 @@ struct ReviewSchedulerTests {
 
         #expect(word.reviewStatus == .learning)
         #expect(interval(word) == 30 * 60)
+        #expect(word.mistakeCount == 1)
         #expect(outcome.didReachMastered == false)
     }
 
