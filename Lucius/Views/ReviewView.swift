@@ -3,10 +3,13 @@ import SwiftUI
 
 struct ReviewView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
+    private let dailyFocusSession: DailyFocusSession?
     @State private var viewModel = ReviewViewModel()
     @State private var selectedModes: Set<ReviewPracticeMode>
     @State private var sessionStarted = false
+    @State private var dailyFocusDidLoad = false
     @State private var typedAnswer = ""
     @State private var usageSentence = ""
     @State private var flashcardRevealed = false
@@ -14,13 +17,15 @@ struct ReviewView: View {
 
     private enum InputField { case answer, usage }
 
-    init() {
+    init(dailyFocusSession: DailyFocusSession? = nil) {
+        self.dailyFocusSession = dailyFocusSession
         let audioAvailable = SpeechService.shared.isAvailable(
             languageCode: AppLanguageSettings.learningLanguageCode
         )
         _selectedModes = State(
             initialValue: ReviewModePreferences.load(audioAvailable: audioAvailable)
         )
+        _sessionStarted = State(initialValue: dailyFocusSession != nil)
     }
 
     private var audioAvailable: Bool {
@@ -32,7 +37,10 @@ struct ReviewView: View {
             ZStack {
                 AppBackgroundGradient()
 
-                if !sessionStarted {
+                if isDailyFocus && !dailyFocusDidLoad {
+                    ProgressView()
+                        .tint(.lavender)
+                } else if !sessionStarted {
                     ReviewModeSelectionView(
                         selection: $selectedModes,
                         audioAvailable: audioAvailable,
@@ -54,7 +62,7 @@ struct ReviewView: View {
             .navigationTitle(sessionStarted ? String(localized: "review.title") : "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if sessionStarted {
+                if sessionStarted && !isDailyFocus {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("review.change_modes", systemImage: "slider.horizontal.3") {
                             endSession()
@@ -66,6 +74,10 @@ struct ReviewView: View {
             .onChange(of: learningLanguageCode) { _, _ in
                 guard !sessionStarted else { return }
                 selectedModes = ReviewModePreferences.load(audioAvailable: audioAvailable)
+            }
+            .task(id: dailyFocusSession?.id) {
+                guard isDailyFocus, !dailyFocusDidLoad else { return }
+                startDailyFocus()
             }
         }
         .tint(.lavender)
@@ -305,6 +317,15 @@ struct ReviewView: View {
     }
 
     private var completedState: some View {
+        if let dailyFocusSession {
+            return AnyView(
+                DailyFocusSummaryView(session: dailyFocusSession) {
+                    dismiss()
+                }
+            )
+        }
+
+        return AnyView(
         VStack(spacing: Spacing.xl) {
             EmptyStateView(
                 systemImage: "checkmark.circle",
@@ -316,7 +337,10 @@ struct ReviewView: View {
             }
         }
         .padding(Spacing.xl)
+        )
     }
+
+    private var isDailyFocus: Bool { dailyFocusSession != nil }
 
     private func startSession() {
         ReviewModePreferences.save(selectedModes)
@@ -328,8 +352,42 @@ struct ReviewView: View {
         sessionStarted = true
     }
 
+    private func startDailyFocus() {
+        let result = DailyFocusService.loadOrCreate(context: modelContext)
+        guard let session = result.session, !result.words.isEmpty else {
+            dailyFocusDidLoad = true
+            return
+        }
+        let pendingWords = result.words.filter { !session.completedIDs.contains($0.id) }
+        guard !pendingWords.isEmpty else {
+            dailyFocusDidLoad = true
+            return
+        }
+
+        viewModel.onItemCompleted = { wordID, isCorrect in
+            DailyFocusService.record(
+                wordID: wordID,
+                isCorrect: isCorrect,
+                session: session,
+                context: modelContext
+            )
+        }
+        viewModel.loadWords(
+            pendingWords,
+            selectedModes: [.mixed],
+            audioAvailable: audioAvailable,
+            modeSequence: DailyFocusService.modeSequence(audioAvailable: audioAvailable),
+            modeSequenceOffset: session.completedIDs.intersection(Set(session.wordIDs)).count
+        )
+        dailyFocusDidLoad = true
+    }
+
     private func endSession() {
         focusedField = nil
+        if isDailyFocus {
+            dismiss()
+            return
+        }
         sessionStarted = false
     }
 

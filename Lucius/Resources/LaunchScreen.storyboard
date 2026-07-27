@@ -19,7 +19,7 @@
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="LaunchScreenSafeArea"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" red="0.98" green="0.91" blue="0.87" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="LaunchScreenArtwork" firstAttribute="top" secondItem="LaunchScreenRootView" secondAttribute="top" id="LaunchTop"/>
                             <constraint firstItem="LaunchScreenArtwork" firstAttribute="bottom" secondItem="LaunchScreenRootView" secondAttribute="bottom" id="LaunchBottom"/>

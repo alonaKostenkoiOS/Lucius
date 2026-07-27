@@ -17,6 +17,10 @@ final class ReviewViewModel {
     private var selectedModes: Set<ReviewPracticeMode> = [.mixed]
     private var audioAvailable = false
     private var questionStartedAt = Date.now
+    private var forcedModeSequence: [ReviewPracticeMode] = []
+    private var forcedModeOffset = 0
+
+    var onItemCompleted: ((UUID, Bool) -> Void)?
 
     var currentWord: VocabularyWord? { queue.first }
     var remainingCount: Int { queue.count }
@@ -44,6 +48,26 @@ final class ReviewViewModel {
             .sorted { ($0.nextReviewDate ?? .distantFuture) < ($1.nextReviewDate ?? .distantFuture) }
         self.selectedModes = selectedModes
         self.audioAvailable = audioAvailable
+        forcedModeSequence = []
+        forcedModeOffset = 0
+        sessionTotal = queue.count
+        prepareCurrentQuestion()
+    }
+
+    func loadWords(
+        _ words: [VocabularyWord],
+        selectedModes: Set<ReviewPracticeMode>,
+        audioAvailable: Bool,
+        modeSequence: [ReviewPracticeMode] = [],
+        modeSequenceOffset: Int = 0
+    ) {
+        vocabulary = words
+        var seen = Set<UUID>()
+        queue = words.filter { seen.insert($0.id).inserted }
+        self.selectedModes = selectedModes
+        self.audioAvailable = audioAvailable
+        forcedModeSequence = modeSequence
+        forcedModeOffset = max(modeSequenceOffset, 0)
         sessionTotal = queue.count
         prepareCurrentQuestion()
     }
@@ -103,6 +127,7 @@ final class ReviewViewModel {
             reviewPracticeModeRawValue: ReviewPracticeMode.flashcards.rawValue
         ))
         persist(outcome: outcome, word: word, isCorrect: answer != .forgot, context: context)
+        onItemCompleted?(word.id, answer != .forgot)
         queue.removeFirst()
         prepareCurrentQuestion()
     }
@@ -124,7 +149,17 @@ final class ReviewViewModel {
             return
         }
 
-        let mode = ReviewModeEngine.chooseMode(
+        let queueIndex = max(sessionTotal - queue.count, 0)
+        let sequenceIndex = queueIndex + forcedModeOffset
+        let preferredMode = forcedModeSequence.indices.contains(sequenceIndex) ? forcedModeSequence[sequenceIndex] : nil
+        let mode = preferredMode.flatMap { preferred in
+            ReviewModeEngine.compatibleModes(
+                for: word,
+                vocabulary: vocabulary,
+                selection: [preferred],
+                audioAvailable: audioAvailable
+            ).first
+        } ?? ReviewModeEngine.chooseMode(
             for: word,
             vocabulary: vocabulary,
             selection: selectedModes,
@@ -193,6 +228,7 @@ final class ReviewViewModel {
         )
 
         persist(outcome: outcome, word: question.word, isCorrect: isCorrect, context: context)
+        onItemCompleted?(question.word.id, isCorrect)
     }
 
     private func persist(

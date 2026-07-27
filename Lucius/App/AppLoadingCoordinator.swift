@@ -10,6 +10,7 @@ final class AppLoadingCoordinator {
 
     private var isPreparing = true
     private var generation = 0
+    private var didCompleteInitialPreparation = false
     private let presentationThreshold: Duration = .milliseconds(300)
 
     func beginPreparation() {
@@ -26,6 +27,13 @@ final class AppLoadingCoordinator {
     }
 
     func finishPreparation() async {
+        // Let the first artwork frame render before dismissing the coordinator.
+        // Without this small minimum, the SwiftUI overlay can disappear before
+        // the first window frame and expose a black launch-screen gap.
+        if !didCompleteInitialPreparation {
+            try? await Task.sleep(for: presentationThreshold)
+            didCompleteInitialPreparation = true
+        }
         await Task.yield()
         isPreparing = false
         generation += 1
