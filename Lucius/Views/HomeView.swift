@@ -5,7 +5,9 @@ import SwiftData
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = HomeViewModel()
+    @State private var dailyFocusViewModel = DailyFocusViewModel()
     @State private var isAddingWord = false
+    @State private var isShowingDailyFocus = false
     @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
 
     var body: some View {
@@ -13,6 +15,10 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     header
+
+                    DailyFocusCard(viewModel: dailyFocusViewModel) {
+                        isShowingDailyFocus = true
+                    }
 
                     statsRow
 
@@ -43,7 +49,13 @@ struct HomeView: View {
             .sheet(isPresented: $isAddingWord, onDismiss: refresh) {
                 AddWordView()
             }
+            .sheet(isPresented: $isShowingDailyFocus, onDismiss: refresh) {
+                if let session = dailyFocusViewModel.session {
+                    ReviewView(dailyFocusSession: session)
+                }
+            }
             .onAppear(perform: refresh)
+            .onChange(of: learningLanguageCode) { _, _ in refresh() }
         }
         .tint(.lavender)
     }
@@ -125,10 +137,11 @@ struct HomeView: View {
 
     private func refresh() {
         viewModel.refresh(context: modelContext)
+        dailyFocusViewModel.refresh(context: modelContext)
     }
 }
 
 #Preview {
     HomeView()
-        .modelContainer(for: [VocabularyWord.self, ReviewEvent.self], inMemory: true)
+        .modelContainer(for: [VocabularyWord.self, ReviewEvent.self, DailyFocusSession.self], inMemory: true)
 }

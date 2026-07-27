@@ -5,7 +5,7 @@ import SwiftData
 enum ModelContainerFactory {
     static func make() -> ModelContainer {
         do {
-            return try ModelContainer(for: VocabularyWord.self, ReviewEvent.self)
+            return try ModelContainer(for: VocabularyWord.self, ReviewEvent.self, DailyFocusSession.self)
         } catch {
             fatalError("Failed to create the model container: \(error)")
         }
