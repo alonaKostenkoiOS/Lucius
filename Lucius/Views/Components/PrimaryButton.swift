@@ -20,8 +20,9 @@ struct PrimaryButton: View {
             }
             .font(.headline)
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
+            .frame(maxWidth: .infinity)
             .background(isEnabled ? Color.lavender : Color.lavender.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: Radius.md + 2, style: .continuous))
         }

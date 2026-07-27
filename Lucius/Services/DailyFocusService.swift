@@ -19,7 +19,15 @@ enum DailyFocusService {
             return isOverdue || word.reviewStatus != .mastered
         }
 
-        let unique = Dictionary(grouping: eligible, by: \.id).compactMap { $0.value.first }
+        // Preserve the source order while removing duplicate model rows. A
+        // dictionary-based deduplication can reorder equal-priority items,
+        // which makes a newly generated session feel random when timestamps
+        // are identical.
+        var unique: [VocabularyWord] = []
+        var seenIDs = Set<UUID>()
+        for word in eligible where seenIDs.insert(word.id).inserted {
+            unique.append(word)
+        }
         let overdue = unique.filter { ($0.nextReviewDate ?? .distantFuture) <= now }
         let difficult = unique.filter { $0.difficulty == .hard || $0.mistakeCount > 0 }
         let learning = unique.filter { $0.reviewStatus == .learning }
@@ -38,22 +46,31 @@ enum DailyFocusService {
             let lhsDate = $0.nextReviewDate ?? .distantPast
             let rhsDate = $1.nextReviewDate ?? .distantPast
             if lhsDate != rhsDate { return lhsDate < rhsDate }
-            return $0.createdAt < $1.createdAt
+            if $0.createdAt != $1.createdAt { return $0.createdAt < $1.createdAt }
+            return $0.id.uuidString < $1.id.uuidString
         }
         append(difficult) {
             if $0.mistakeCount != $1.mistakeCount {
                 return $0.mistakeCount > $1.mistakeCount
             }
-            return $0.createdAt < $1.createdAt
+            if $0.createdAt != $1.createdAt { return $0.createdAt < $1.createdAt }
+            return $0.id.uuidString < $1.id.uuidString
         }
-        append(learning) { $0.updatedAt < $1.updatedAt }
-        append(recent) { $0.createdAt > $1.createdAt }
+        append(learning) {
+            if $0.updatedAt != $1.updatedAt { return $0.updatedAt < $1.updatedAt }
+            return $0.id.uuidString < $1.id.uuidString
+        }
+        append(recent) {
+            if $0.createdAt != $1.createdAt { return $0.createdAt > $1.createdAt }
+            return $0.id.uuidString < $1.id.uuidString
+        }
         let selectedIDs = Set(result.map(\.id))
         append(unique.filter { !selectedIDs.contains($0.id) }) {
             let lhsDate = $0.nextReviewDate ?? .distantFuture
             let rhsDate = $1.nextReviewDate ?? .distantFuture
             if lhsDate != rhsDate { return lhsDate < rhsDate }
-            return $0.updatedAt < $1.updatedAt
+            if $0.updatedAt != $1.updatedAt { return $0.updatedAt < $1.updatedAt }
+            return $0.id.uuidString < $1.id.uuidString
         }
         return result
     }

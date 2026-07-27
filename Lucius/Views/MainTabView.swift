@@ -327,5 +327,5 @@ final class WordMatchViewModel {
 #Preview {
     MainTabView()
         .environment(AppRouter())
-        .modelContainer(for: [VocabularyWord.self, ReviewEvent.self], inMemory: true)
+        .modelContainer(for: [VocabularyWord.self, ReviewEvent.self, DailyFocusSession.self], inMemory: true)
 }

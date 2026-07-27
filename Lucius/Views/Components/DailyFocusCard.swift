@@ -23,10 +23,7 @@ struct DailyFocusCard: View {
                     }
                 }
                 Spacer(minLength: Spacing.sm)
-                ProgressView(value: viewModel.progress)
-                    .progressViewStyle(.circular)
-                    .tint(.lavender)
-                    .scaleEffect(1.15)
+                DailyFocusProgressIndicator(progress: viewModel.progress)
                     .accessibilityLabel(String(localized: "daily_focus.progress"))
                     .accessibilityValue(String(format: String(localized: "daily_focus.progress_value"), viewModel.completedCount, viewModel.wordCount))
             }
@@ -35,21 +32,24 @@ struct DailyFocusCard: View {
                 Text("daily_focus.completed_message")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("daily_focus.come_back")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.lavender)
             } else if viewModel.wordCount > 0 {
-                HStack {
-                    Text(String(format: String(localized: "daily_focus.about_minutes"), viewModel.estimatedMinutes))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.deepPurple)
-                    Spacer()
-                    PrimaryButton(
-                        title: String(localized: viewModel.isInProgress ? "daily_focus.continue" : "daily_focus.start"),
-                        systemImage: viewModel.isInProgress ? "arrow.right" : "play.fill",
-                        action: onStart
-                    )
-                    .fixedSize(horizontal: true, vertical: false)
+                // Keep the compact layout when it fits, but move the CTA below
+                // the estimate on narrow screens or with larger Dynamic Type.
+                // This prevents long localized titles (for example, Ukrainian)
+                // from being compressed or clipped by the surrounding HStack.
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: Spacing.md) {
+                        durationLabel
+                        Spacer(minLength: Spacing.sm)
+                        actionButton
+                            .frame(minWidth: 150, maxWidth: 210)
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        durationLabel
+                        actionButton
+                            .frame(maxWidth: .infinity)
+                    }
                 }
             } else {
                 Text("daily_focus.empty_message")
@@ -70,6 +70,41 @@ struct DailyFocusCard: View {
             return String(format: String(localized: "daily_focus.completed_count"), viewModel.wordCount)
         }
         return String(format: String(localized: "daily_focus.ready_count"), viewModel.wordCount)
+    }
+
+    private var durationLabel: some View {
+        Text(String(format: String(localized: "daily_focus.about_minutes"), viewModel.estimatedMinutes))
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.deepPurple)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var actionButton: some View {
+        PrimaryButton(
+            title: String(localized: viewModel.isInProgress ? "daily_focus.continue" : "daily_focus.start"),
+            systemImage: viewModel.isInProgress ? "arrow.right" : "play.fill",
+            action: onStart
+        )
+    }
+}
+
+private struct DailyFocusProgressIndicator: View {
+    let progress: Double
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.lavenderSoft, lineWidth: 5)
+
+            Circle()
+                .trim(from: 0, to: min(max(progress, 0), 1))
+                .stroke(
+                    Color.lavender,
+                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: 34, height: 34)
     }
 }
 
