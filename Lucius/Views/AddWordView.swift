@@ -11,9 +11,9 @@ struct AddWordView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Word") {
+                Section(String(localized: "word.field.word")) {
                     HStack {
-                        TextField("Word", text: $viewModel.word)
+                        TextField(String(localized: "word.field.word"), text: $viewModel.word)
                             .textInputAutocapitalization(.never)
 
                         if !viewModel.word.isEmpty {
@@ -24,11 +24,11 @@ struct AddWordView: View {
                     Button {
                         scannerTarget = .word
                     } label: {
-                        Label("Scan word with camera", systemImage: "text.viewfinder")
+                        Label("word.scan_word", systemImage: "text.viewfinder")
                     }
-                    .accessibilityHint("Opens the camera so you can select printed text")
+                    .accessibilityHint(String(localized: "accessibility.scan_word_hint"))
 
-                    TextField("Translation", text: $viewModel.translation)
+                    TextField(String(localized: "word.field.translation"), text: $viewModel.translation)
 
                     AutoTranslateButton(sourceText: viewModel.word) { translated in
                         viewModel.translation = translated
@@ -36,62 +36,62 @@ struct AddWordView: View {
                 }
 
                 Section {
-                    TextField("Example from book", text: $viewModel.example, axis: .vertical)
+                    TextField(String(localized: "word.field.context"), text: $viewModel.example, axis: .vertical)
                         .lineLimit(2...4)
 
                     Button {
                         scannerTarget = .context
                     } label: {
-                        Label("Scan context with camera", systemImage: "camera.viewfinder")
+                        Label("word.scan_context", systemImage: "camera.viewfinder")
                     }
-                    .accessibilityHint("Searches camera text for the word and captures its sentence")
+                    .accessibilityHint(String(localized: "accessibility.scan_context_hint"))
                     .disabled(viewModel.word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 } header: {
-                    Text("Context")
+                    Text("word.field.context")
                 }
 
                 Section {
                     TextField(
-                        "Imagine a dark rainy room with one candle…",
+                        String(localized: "word.visual_scene_placeholder"),
                         text: $viewModel.visualAssociation,
                         axis: .vertical
                     )
                     .lineLimit(2...4)
                 } header: {
-                    Text("Visual scene")
+                    Text("word.field.visual_scene")
                 } footer: {
-                    Text("A vivid mental image makes the word much easier to recall.")
+                    Text("word.visual_scene_hint")
                 }
 
-                Section("Book") {
-                    TextField("Book title", text: $viewModel.bookTitle)
-                    TextField("Chapter", text: $viewModel.chapter)
+                Section(String(localized: "word.field.book")) {
+                    TextField(String(localized: "word.book_placeholder"), text: $viewModel.bookTitle)
+                    TextField(String(localized: "word.field.chapter"), text: $viewModel.chapter)
                 }
 
                 Section {
-                    Picker("Difficulty", selection: $viewModel.difficulty) {
+                    Picker(String(localized: "word.field.difficulty"), selection: $viewModel.difficulty) {
                         ForEach(WordDifficulty.allCases) { difficulty in
                             Text(difficulty.displayName).tag(difficulty)
                         }
                     }
                     .pickerStyle(.segmented)
                 } header: {
-                    Text("Difficulty")
+                    Text("word.field.difficulty")
                 } footer: {
-                    Text("Harder words come back for review sooner.")
+                    Text("word.difficulty_hint")
                 }
             }
             .scrollContentBackground(.hidden)
             .background(Color.appBackground)
-            .navigationTitle("New word")
+            .navigationTitle("word.add.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                PrimaryButton(title: "Save word", isEnabled: viewModel.canSave) {
+                PrimaryButton(title: String(localized: "common.save"), isEnabled: viewModel.canSave) {
                     saveWord()
                 }
                 .padding(.horizontal, 20)

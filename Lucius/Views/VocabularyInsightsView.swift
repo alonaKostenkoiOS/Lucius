@@ -10,7 +10,7 @@ struct VocabularyInsightsView: View {
     var body: some View {
         NavigationStack {
             VocabularyInsightsContent(snapshot: viewModel.snapshot)
-                .navigationTitle("Insights")
+                .navigationTitle("insights.title")
                 .onAppear(perform: refresh)
                 .onChange(of: languageCode) {
                     refresh()
@@ -69,10 +69,10 @@ struct VocabularyInsightsContent: View {
                 )
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("\(snapshot.overview.total) words")
+                    Text(String(format: String(localized: "insights.words_count"), snapshot.overview.total))
                         .font(.title2.bold())
                         .foregroundStyle(Color.deepPurple)
-                    Text("\(Int(snapshot.reviewAccuracy * 100))% recall accuracy")
+                    Text(String(format: String(localized: "insights.recall_accuracy"), Int(snapshot.reviewAccuracy * 100)))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -155,7 +155,7 @@ struct VocabularyInsightsContent: View {
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(Color.deepPurple)
                             .frame(width: 30, alignment: .leading)
-                        Text("\(item.count) words")
+                        Text(String(format: String(localized: "insights.words_count"), item.count))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -190,14 +190,14 @@ struct VocabularyInsightsContent: View {
                         .frame(width: 36, height: 36)
                         .background(Color.orange.opacity(0.12), in: Circle())
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Hardest part of speech")
+                        Text("insights.hardest_part_of_speech")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(hardest.name)
                             .font(.headline)
                     }
                     Spacer()
-                    Text("\(hardest.mistakeCount) mistakes")
+                    Text(String(format: String(localized: "insights.mistakes_count"), hardest.mistakeCount))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.orange)
                 }
@@ -205,7 +205,7 @@ struct VocabularyInsightsContent: View {
 
             if !snapshot.mostForgottenWords.isEmpty {
                 Divider()
-                Text("Most forgotten words")
+                Text("insights.most_forgotten_words")
                     .font(.subheadline.weight(.semibold))
 
                 ForEach(snapshot.mostForgottenWords) { word in
@@ -416,7 +416,7 @@ struct InsightCallout: View {
 #Preview("Vocabulary Insights — Demo") {
     NavigationStack {
         VocabularyInsightsContent(snapshot: .demo())
-            .navigationTitle("Insights")
+            .navigationTitle("insights.title")
     }
     .preferredColorScheme(.light)
 }

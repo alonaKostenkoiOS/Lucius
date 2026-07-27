@@ -18,7 +18,7 @@ struct SpeakButton: View {
                 .clipShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Pronounce word")
+        .accessibilityLabel("accessibility.pronounce")
     }
 }
 

@@ -8,7 +8,7 @@ struct VisualSceneCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("Visual scene", systemImage: "sparkles")
+            Label("word.field.visual_scene", systemImage: "sparkles")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.lavender)
                 .textCase(.uppercase)

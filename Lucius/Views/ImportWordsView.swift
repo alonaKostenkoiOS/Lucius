@@ -23,11 +23,11 @@ struct ImportWordsView: View {
                 .padding(Spacing.xl)
             }
             .background(AppBackgroundGradient())
-            .navigationTitle("Import from a book")
+            .navigationTitle("import.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
             .safeAreaInset(edge: .bottom) { importBar }
@@ -47,14 +47,14 @@ struct ImportWordsView: View {
 
     private var sourceSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Passage")
+            Text("import.passage")
                 .font(.cardLabel)
                 .foregroundStyle(Color.lavender)
                 .textCase(.uppercase)
 
             ZStack(alignment: .topLeading) {
                 if viewModel.sourceText.isEmpty {
-                    Text("Paste a few sentences from what you're reading, or scan a page.")
+                    Text("import.passage_hint")
                         .foregroundStyle(.secondary)
                         .padding(Spacing.md)
                         .allowsHitTesting(false)
@@ -88,7 +88,7 @@ struct ImportWordsView: View {
     private var candidatesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             HStack {
-                Text("Words to learn")
+                Text("import.words_to_learn")
                     .font(.cardLabel)
                     .foregroundStyle(Color.lavender)
                     .textCase(.uppercase)
@@ -107,7 +107,7 @@ struct ImportWordsView: View {
                 }
             }
 
-            Text("Tap the words worth remembering. Lucius will translate and schedule each one.")
+            Text("import.selection_hint")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -138,7 +138,7 @@ struct ImportWordsView: View {
             VStack(spacing: Spacing.sm) {
                 if viewModel.isImporting {
                     ProgressView(value: viewModel.importProgress) {
-                        Text("Adding \(viewModel.importedCount) of \(viewModel.selected.count)…")
+                        Text(String(format: String(localized: "import.adding_progress"), viewModel.importedCount, viewModel.selected.count))
                             .font(.caption)
                     }
                     .tint(.lavender)

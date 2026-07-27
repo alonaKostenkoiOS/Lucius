@@ -14,7 +14,7 @@ struct SceneImageView: View {
                 .frame(height: height)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
                 .elevation(.card)
-                .accessibilityLabel("Generated memory scene image")
+                .accessibilityLabel("accessibility.memory_scene_image")
         }
     }
 }

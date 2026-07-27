@@ -13,13 +13,13 @@ struct ActivityHeatmap: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             HStack {
-                Label("Activity", systemImage: "flame.fill")
+                Label("insights.activity", systemImage: "flame.fill")
                     .font(.cardLabel)
                     .foregroundStyle(Color.lavender)
                     .textCase(.uppercase)
                 Spacer()
                 if streak > 0 {
-                    Text("\(streak)-day streak")
+                    Text(String(format: String(localized: "insights.day_streak"), streak))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.deepPurple)
                 }

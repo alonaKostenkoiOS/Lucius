@@ -9,46 +9,44 @@ enum AppSettingsKeys {
     static let translationLanguageCode = "translationLanguageCode"
 }
 
-struct LanguageOption: Identifiable, Hashable {
-    let code: String
-    let name: String
-
-    var id: String { code }
-}
+typealias LanguageOption = SupportedLanguage
 
 /// The currently selected language pair, shared by OCR, speech and translation.
 enum AppLanguageSettings {
     static var learningLanguageCode: String {
-        get { UserDefaults.standard.string(forKey: AppSettingsKeys.learningLanguageCode) ?? "en" }
-        set { UserDefaults.standard.set(newValue, forKey: AppSettingsKeys.learningLanguageCode) }
+        get {
+            learningLanguageCode(defaults: .standard)
+        }
+        set { UserDefaults.standard.set(SupportedLanguage(rawValue: newValue)?.rawValue ?? SupportedLanguage.english.rawValue, forKey: AppSettingsKeys.learningLanguageCode) }
+    }
+
+    static func learningLanguageCode(defaults: UserDefaults) -> String {
+        let saved = defaults.string(forKey: AppSettingsKeys.learningLanguageCode) ?? SupportedLanguage.english.rawValue
+        return SupportedLanguage(rawValue: saved)?.rawValue ?? SupportedLanguage.english.rawValue
     }
 
     static var translationLanguageCode: String {
         get {
-            if let saved = UserDefaults.standard.string(forKey: AppSettingsKeys.translationLanguageCode) {
-                return saved
+            if let saved = UserDefaults.standard.string(forKey: AppSettingsKeys.translationLanguageCode),
+               let language = SupportedLanguage(rawValue: saved),
+               language.rawValue != learningLanguageCode {
+                return language.rawValue
             }
-            let deviceCode = Locale.current.language.languageCode?.identifier ?? "uk"
-            return deviceCode == learningLanguageCode ? "uk" : deviceCode
+            let deviceLanguage = SupportedLanguage.systemLanguage.rawValue
+            return deviceLanguage == learningLanguageCode
+                ? (SupportedLanguage.allCases.first { $0.rawValue != learningLanguageCode }?.rawValue ?? SupportedLanguage.english.rawValue)
+                : deviceLanguage
         }
-        set { UserDefaults.standard.set(newValue, forKey: AppSettingsKeys.translationLanguageCode) }
+        set {
+            guard let language = SupportedLanguage(rawValue: newValue), language.rawValue != learningLanguageCode else { return }
+            UserDefaults.standard.set(language.rawValue, forKey: AppSettingsKeys.translationLanguageCode)
+        }
     }
 
-    static let availableLanguages: [LanguageOption] = {
-        let displayLocale = Locale.current
-        return Locale.isoLanguageCodes
-            .filter { $0.count == 2 && $0 != "und" }
-            .compactMap { code in
-                guard let name = displayLocale.localizedString(forLanguageCode: code) else { return nil }
-                return LanguageOption(code: code, name: name.capitalized(with: displayLocale))
-            }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }()
+    static let availableLanguages: [LanguageOption] = SupportedLanguage.allCases
 
     static func displayName(for code: String) -> String {
-        availableLanguages.first(where: { $0.code == code })?.name
-            ?? Locale.current.localizedString(forLanguageCode: code)
-            ?? code.uppercased()
+        availableLanguages.first(where: { $0.code == code })?.nativeName ?? SupportedLanguage.english.nativeName
     }
 }
 
@@ -85,8 +83,8 @@ final class NotificationService {
               reviewDate > .now else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Time to review: \(word.word)"
-        content.body = "Open Lucius and remember the visual association."
+        content.title = String(format: String(localized: "notification.review_title"), word.word)
+        content.body = String(localized: "notification.review_body")
         content.sound = .default
 
         let components = Calendar.current.dateComponents(

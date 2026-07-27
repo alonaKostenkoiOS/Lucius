@@ -22,7 +22,8 @@ targets:
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_FILE: Lucius/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: false
+        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Lucius
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Lucius saves generated scene images to your photo library only when you tap Save.

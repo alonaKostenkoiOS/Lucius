@@ -40,7 +40,7 @@ struct CelebrationView: View {
                 .foregroundStyle(Color.answerKnow)
                 .symbolEffect(.bounce, value: isActive)
 
-            Text("Mastered!")
+            Text("status.mastered")
                 .font(.system(.title, design: .serif).weight(.bold))
                 .foregroundStyle(Color.deepPurple)
         }
@@ -49,7 +49,7 @@ struct CelebrationView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
         .elevation(.lifted)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Word mastered")
+        .accessibilityLabel("status.mastered")
     }
 }
 
@@ -137,7 +137,7 @@ private struct ConfettiPieceView: View {
         var body: some View {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
-                Button("Celebrate") { on = true }
+                Button("common.ok") { on = true }
                 CelebrationView(isActive: $on)
             }
         }

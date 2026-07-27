@@ -13,25 +13,25 @@ enum ReviewPracticeMode: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .flashcards: "Flashcards"
-        case .cloze: "Cloze"
-        case .multipleChoice: "Multiple Choice"
-        case .typeWord: "Type the Word"
-        case .listening: "Listening"
-        case .useSentence: "Use in a Sentence"
-        case .mixed: "Mixed"
+        case .flashcards: String(localized: "review.mode.flashcards")
+        case .cloze: String(localized: "review.mode.cloze")
+        case .multipleChoice: String(localized: "review.mode.multiple_choice")
+        case .typeWord: String(localized: "review.mode.type_word")
+        case .listening: String(localized: "review.mode.listening")
+        case .useSentence: String(localized: "review.mode.use_sentence")
+        case .mixed: String(localized: "review.mode.mixed")
         }
     }
 
     var description: String {
         switch self {
-        case .flashcards: "Review words one by one."
-        case .cloze: "Fill in the missing word using context."
-        case .multipleChoice: "Choose the correct translation."
-        case .typeWord: "Recall the word from its meaning."
-        case .listening: "Recognize spoken vocabulary."
-        case .useSentence: "Practice active recall in your own context."
-        case .mixed: "Randomly combine all available review types."
+        case .flashcards: String(localized: "review.mode.flashcards.description")
+        case .cloze: String(localized: "review.mode.cloze.description")
+        case .multipleChoice: String(localized: "review.mode.multiple_choice.description")
+        case .typeWord: String(localized: "review.mode.type_word.description")
+        case .listening: String(localized: "review.mode.listening.description")
+        case .useSentence: String(localized: "review.mode.use_sentence.description")
+        case .mixed: String(localized: "review.mode.mixed.description")
         }
     }
 

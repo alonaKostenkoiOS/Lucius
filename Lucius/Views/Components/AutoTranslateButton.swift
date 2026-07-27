@@ -91,10 +91,10 @@ private struct TranslateButtonLabel: View {
             if isTranslating {
                 ProgressView()
                     .tint(Color.lavender)
-                Text("Translating…")
+                Text("word.translating")
             } else {
                 Image(systemName: "globe")
-                Text("Translate")
+                Text("word.translate")
             }
         }
         .font(.subheadline.weight(.semibold))

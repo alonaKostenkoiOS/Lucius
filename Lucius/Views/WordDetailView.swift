@@ -63,7 +63,7 @@ struct WordDetailView: View {
                 }
             )
         ) {
-            Button("OK", role: .cancel) {}
+            Button("common.ok", role: .cancel) {}
         } message: {
             Text(generationManager.failureMessage(for: word) ?? "")
         }
@@ -140,7 +140,7 @@ struct WordDetailView: View {
                     Button {
                         viewModel.removeSceneImage(context: modelContext)
                     } label: {
-                        Label("Remove", systemImage: "trash")
+                        Label("common.delete", systemImage: "trash")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.red)
                             .frame(maxWidth: .infinity)
@@ -192,7 +192,7 @@ struct WordDetailView: View {
                 Text(nextReviewDate.formatted(date: .abbreviated, time: .shortened))
                     .font(.body.weight(.medium))
             } else {
-                Text("Not scheduled")
+                Text("review.not_scheduled")
                     .foregroundStyle(.secondary)
             }
         }

@@ -9,17 +9,17 @@ enum ContextReviewMode: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .recognize: "Recognize"
-        case .recall: "Recall"
-        case .use: "Use"
+        case .recognize: String(localized: "context.mode.recognize")
+        case .recall: String(localized: "context.mode.recall")
+        case .use: String(localized: "context.mode.use")
         }
     }
 
     var instruction: String {
         switch self {
-        case .recognize: "Choose the word that completes the sentence."
-        case .recall: "Type the missing word from memory."
-        case .use: "Write your own sentence using this word."
+        case .recognize: String(localized: "context.mode.recognize.description")
+        case .recall: String(localized: "context.mode.recall.description")
+        case .use: String(localized: "context.mode.use.description")
         }
     }
 }

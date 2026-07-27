@@ -54,7 +54,7 @@ struct StatusBadge: View {
             .padding(.vertical, 4)
             .background(status.badgeColor.opacity(0.12))
             .clipShape(Capsule())
-            .accessibilityLabel("Status")
+            .accessibilityLabel("accessibility.status")
             .accessibilityValue(status.displayName)
     }
 }

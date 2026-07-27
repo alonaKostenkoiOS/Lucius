@@ -17,11 +17,11 @@ struct MasteryRing: View {
                     .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.deepPurple)
                     .contentTransition(.numericText())
-                Text("mastered")
+                Text("status.mastered")
                     .font(.cardLabel)
                     .foregroundStyle(Color.lavender)
                     .textCase(.uppercase)
-                Text("\(masteredCount) of \(totalCount) words")
+                Text(String(format: String(localized: "insights.mastery_count"), masteredCount, totalCount))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -34,7 +34,7 @@ struct MasteryRing: View {
             withAnimation(.spring(response: 0.9, dampingFraction: 0.85)) { animated = true }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Mastery progress")
+        .accessibilityLabel("accessibility.mastery")
         .accessibilityValue("\(Int(fraction * 100)) percent, \(masteredCount) of \(totalCount) words mastered")
     }
 

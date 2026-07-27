@@ -13,10 +13,10 @@ struct ReviewModeSelectionView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xl) {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Text("Choose how to practice")
+                    Text("review.choose_modes")
                         .font(.appTitle)
                         .foregroundStyle(Color.deepPurple)
-                    Text("Select one or more modes. Lucius will mix multiple selections during the session.")
+                    Text("review.choose_modes.subtitle")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -37,7 +37,7 @@ struct ReviewModeSelectionView: View {
         }
         .safeAreaInset(edge: .bottom) {
             PrimaryButton(
-                title: "Start review",
+                title: String(localized: "review.start"),
                 systemImage: "play.fill",
                 isEnabled: !selection.isEmpty,
                 action: onStart
@@ -110,7 +110,7 @@ struct ReviewModeCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(mode.title). \(mode.description)")
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityValue(isSelected ? String(localized: "accessibility.selected") : String(localized: "accessibility.not_selected"))
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

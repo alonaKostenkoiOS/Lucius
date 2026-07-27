@@ -10,6 +10,8 @@ enum AppFeatures {
 struct LuciusApp: App {
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @State private var router = AppRouter()
+    @State private var loadingCoordinator = AppLoadingCoordinator()
+    @Environment(\.scenePhase) private var scenePhase
 
     private let modelContainer: ModelContainer
 
@@ -17,7 +19,7 @@ struct LuciusApp: App {
         // Reminders are on by default until the user turns them off in Settings.
         UserDefaults.standard.register(defaults: [
             AppSettingsKeys.notificationsEnabled: true,
-            AppSettingsKeys.learningLanguageCode: "en",
+            AppSettingsKeys.learningLanguageCode: SupportedLanguage.systemLanguage.rawValue,
         ])
 
         modelContainer = ModelContainerFactory.make()
@@ -28,21 +30,39 @@ struct LuciusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if hasSeenWelcome {
-                    MainTabView()
-                } else {
-                    WelcomeView {
-                        withAnimation(.easeOut) {
-                            hasSeenWelcome = true
+            ZStack {
+                Group {
+                    if hasSeenWelcome || OnboardingStore.hasCompleted {
+                        MainTabView()
+                    } else {
+                        OnboardingView {
+                            withAnimation(.easeOut) {
+                                hasSeenWelcome = true
+                            }
                         }
                     }
                 }
+
+                if loadingCoordinator.isShowing {
+                    LoadingView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
             }
             .environment(router)
+            .animation(.easeInOut(duration: 0.25), value: loadingCoordinator.isShowing)
             .onOpenURL { url in
                 hasSeenWelcome = true // a deep link implies onboarding is done
+                OnboardingStore.complete()
                 router.handle(url)
+            }
+            .task {
+                await loadingCoordinator.finishPreparation()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                loadingCoordinator.beginPreparation()
+                Task { await loadingCoordinator.finishPreparation() }
             }
         }
         .modelContainer(modelContainer)

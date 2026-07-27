@@ -28,7 +28,10 @@ enum WordExtractor {
         var seen = Set<String>()
         var result: [String] = []
         let minimumLength = languageCode == "en" ? 4 : 2
-        let languagesWithoutRequiredWordSpacing: Set<String> = ["zh", "ja", "th", "lo", "km", "my"]
+        let languagesWithoutRequiredWordSpacing: Set<String> = [
+            SupportedLanguage.chineseSimplified.rawValue,
+            SupportedLanguage.japanese.rawValue
+        ]
 
         let tokens: [String]
         if languagesWithoutRequiredWordSpacing.contains(languageCode) {

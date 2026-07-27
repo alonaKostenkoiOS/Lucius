@@ -51,12 +51,12 @@ struct ReviewView: View {
 
                 CelebrationView(isActive: $viewModel.celebrate)
             }
-            .navigationTitle(sessionStarted ? "Review" : "")
+            .navigationTitle(sessionStarted ? String(localized: "review.title") : "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if sessionStarted {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("Modes", systemImage: "slider.horizontal.3") {
+                        Button("review.change_modes", systemImage: "slider.horizontal.3") {
                             endSession()
                         }
                     }
@@ -86,12 +86,12 @@ struct ReviewView: View {
                     ReviewAnswerButtons {
                         viewModel.answerFlashcard($0, context: modelContext)
                     }
-                    Text("or swipe the card")
+                    Text("review.swipe_hint")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             } else {
-                PrimaryButton(title: "Show answer", systemImage: "eye") {
+                PrimaryButton(title: String(localized: "review.show_answer"), systemImage: "eye") {
                     withAnimation { flashcardRevealed = true }
                 }
             }
@@ -113,7 +113,7 @@ struct ReviewView: View {
                         ContextReviewFeedbackCard(feedback: feedback, mode: question.mode)
                             .id("feedback")
 
-                        PrimaryButton(title: "Continue", systemImage: "arrow.right") {
+                        PrimaryButton(title: String(localized: "common.continue"), systemImage: "arrow.right") {
                             focusedField = nil
                             withAnimation { viewModel.continueReview() }
                         }
@@ -145,7 +145,7 @@ struct ReviewView: View {
             case .cloze:
                 sentencePrompt(question)
                 translationHint(question)
-                answerField(placeholder: "Missing word")
+                answerField(placeholder: String(localized: "review.missing_word"))
 
             case .multipleChoice:
                 wordHeading(question.correctAnswer)
@@ -159,7 +159,7 @@ struct ReviewView: View {
             case .typeWord:
                 if let translation = question.translation {
                     VStack(spacing: Spacing.sm) {
-                        Text("Meaning")
+                        Text("review.meaning")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(Color.lavender)
                             .textCase(.uppercase)
@@ -179,7 +179,7 @@ struct ReviewView: View {
                     Button {
                         speak(question)
                     } label: {
-                        Label("Play again", systemImage: "speaker.wave.2.fill")
+                            Label("review.play_again", systemImage: "speaker.wave.2.fill")
                             .font(.headline)
                             .padding(.horizontal, Spacing.lg)
                             .padding(.vertical, Spacing.md)
@@ -206,7 +206,7 @@ struct ReviewView: View {
                         .frame(maxWidth: .infinity)
                 }
                 TextField(
-                    "Write a sentence containing \(question.correctAnswer)…",
+                    String(format: String(localized: "review.use_sentence_placeholder"), question.correctAnswer),
                     text: $usageSentence,
                     axis: .vertical
                 )
@@ -219,7 +219,7 @@ struct ReviewView: View {
 
                 if !viewModel.hasSubmittedAnswer {
                     PrimaryButton(
-                        title: "Save sentence",
+                        title: String(localized: "review.save_sentence"),
                         systemImage: "square.and.arrow.down",
                         isEnabled: ContextReviewText.cleaned(usageSentence) != nil
                     ) {
@@ -249,7 +249,7 @@ struct ReviewView: View {
 
         if !viewModel.hasSubmittedAnswer {
             PrimaryButton(
-                title: "Check answer",
+                title: String(localized: "review.check_answer"),
                 systemImage: "checkmark",
                 isEnabled: ContextReviewText.cleaned(typedAnswer) != nil,
                 action: submitTypedAnswer
@@ -261,7 +261,7 @@ struct ReviewView: View {
         Text(question.clozeSentence ?? "")
             .font(.title2.weight(.semibold))
             .fixedSize(horizontal: false, vertical: true)
-            .accessibilityLabel("Sentence with a missing word: \(question.clozeSentence ?? "")")
+            .accessibilityLabel(String(format: String(localized: "accessibility.missing_sentence"), question.clozeSentence ?? ""))
     }
 
     @ViewBuilder
@@ -288,7 +288,7 @@ struct ReviewView: View {
     private var sessionHeader: some View {
         VStack(spacing: Spacing.sm) {
             HStack {
-                Text("\(viewModel.remainingCount) left")
+                Text(String(format: String(localized: "review.words_remaining"), viewModel.remainingCount))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -308,10 +308,10 @@ struct ReviewView: View {
         VStack(spacing: Spacing.xl) {
             EmptyStateView(
                 systemImage: "checkmark.circle",
-                title: "All caught up",
-                message: "No words to review right now. Come back when a reminder arrives."
+                title: String(localized: "review.all_caught_up.title"),
+                message: String(localized: "review.all_caught_up.subtitle")
             )
-            PrimaryButton(title: "Change review modes", systemImage: "slider.horizontal.3") {
+            PrimaryButton(title: String(localized: "review.change_modes"), systemImage: "slider.horizontal.3") {
                 endSession()
             }
         }

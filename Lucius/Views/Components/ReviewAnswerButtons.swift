@@ -7,9 +7,9 @@ struct ReviewAnswerButtons: View {
 
     var body: some View {
         HStack(spacing: Spacing.md) {
-            answerButton("I forgot", tint: .answerForgot, answer: .forgot, hint: "Resets this word to review again soon")
-            answerButton("Almost", tint: .answerAlmost, answer: .almost, hint: "You nearly remembered it")
-            answerButton("I know it", tint: .answerKnow, answer: .knowIt, hint: "You recalled it confidently")
+            answerButton(String(localized: "review.answer.forgot"), tint: .answerForgot, answer: .forgot, hint: String(localized: "review.answer.forgot_hint"))
+            answerButton(String(localized: "review.answer.almost"), tint: .answerAlmost, answer: .almost, hint: String(localized: "review.answer.almost_hint"))
+            answerButton(String(localized: "review.answer.know"), tint: .answerKnow, answer: .knowIt, hint: String(localized: "review.answer.know_hint"))
         }
     }
 

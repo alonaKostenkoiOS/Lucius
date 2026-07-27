@@ -26,7 +26,7 @@ struct HomeView: View {
                         ActivityHeatmap(activity: viewModel.activity, streak: viewModel.streak)
                     }
 
-                    PrimaryButton(title: "Add word", systemImage: "plus") {
+                    PrimaryButton(title: String(localized: "home.add_word"), systemImage: "plus") {
                         isAddingWord = true
                     }
 
@@ -51,16 +51,16 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Lucius")
+                Text("home.title")
                     .font(.appTitle)
                     .foregroundStyle(Color.deepPurple)
 
-                Text("Remember words. Create scenes.")
+                Text("home.tagline")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                 Label(
-                    "Learning \(AppLanguageSettings.displayName(for: learningLanguageCode))",
+                    String(format: String(localized: "home.learning"), AppLanguageSettings.displayName(for: learningLanguageCode)),
                     systemImage: "globe"
                 )
                 .font(.caption.weight(.semibold))
@@ -81,18 +81,18 @@ struct HomeView: View {
         HStack(spacing: 12) {
             StatCardView(
                 value: viewModel.totalWordsCount,
-                label: "Total words",
+                label: String(localized: "home.total_words"),
                 systemImage: "book.closed"
             )
             StatCardView(
                 value: viewModel.dueTodayCount,
-                label: "Due today",
+                label: String(localized: "home.due_today"),
                 systemImage: "clock",
                 tint: .orange
             )
             StatCardView(
                 value: viewModel.masteredCount,
-                label: "Mastered",
+                label: String(localized: "home.mastered"),
                 systemImage: "checkmark.seal",
                 tint: .green
             )
@@ -102,14 +102,14 @@ struct HomeView: View {
     @ViewBuilder
     private var recentWordsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent words")
+            Text("home.recent_words")
                 .font(.title3.bold())
 
             if viewModel.recentWords.isEmpty {
                 EmptyStateView(
                     systemImage: "books.vertical",
-                    title: "No words yet",
-                    message: "Add the first word from a book you are reading — it becomes a little scene for your memory."
+                    title: String(localized: "home.no_words.title"),
+                    message: String(localized: "home.no_words.subtitle")
                 )
             } else {
                 ForEach(viewModel.recentWords) { word in

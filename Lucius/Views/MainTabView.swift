@@ -11,31 +11,31 @@ struct MainTabView: View {
         TabView(selection: $router.selectedTab) {
             HomeView()
                 .tabItem {
-                    Label("Home", systemImage: "house")
+                    Label("tab.home", systemImage: "house")
                 }
                 .tag(AppRouter.Tab.home)
 
             ReviewView()
                 .tabItem {
-                    Label("Review", systemImage: "rectangle.stack")
+                    Label("tab.review", systemImage: "rectangle.stack")
                 }
                 .tag(AppRouter.Tab.review)
 
             WordMatchView()
                 .tabItem {
-                    Label("Match", systemImage: "arrow.left.arrow.right.circle")
+                    Label("tab.match", systemImage: "arrow.left.arrow.right.circle")
                 }
                 .tag(AppRouter.Tab.match)
 
             VocabularyInsightsView()
                 .tabItem {
-                    Label("Insights", systemImage: "chart.bar.xaxis")
+                    Label("tab.insights", systemImage: "chart.bar.xaxis")
                 }
                 .tag(AppRouter.Tab.insights)
 
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape")
+                    Label("tab.settings", systemImage: "gearshape")
                 }
                 .tag(AppRouter.Tab.settings)
         }
@@ -66,15 +66,15 @@ struct WordMatchView: View {
                 if viewModel.pairs.count < 2 {
                     EmptyStateView(
                         systemImage: "arrow.left.arrow.right",
-                        title: "Add at least two words",
-                        message: "Matching becomes available when your vocabulary has two words with translations."
+                        title: String(localized: "match.empty.title"),
+                        message: String(localized: "match.empty.subtitle")
                     )
                     .padding(Spacing.xl)
                 } else {
                     gameContent
                 }
             }
-            .navigationTitle("Match")
+            .navigationTitle("match.title")
             .onAppear {
                 viewModel.refreshIfNeeded(from: languageWords)
             }
@@ -92,13 +92,13 @@ struct WordMatchView: View {
         ScrollView {
             VStack(spacing: Spacing.xl) {
                 VStack(spacing: Spacing.sm) {
-                    Text(viewModel.isComplete ? "Round complete" : "Connect each pair")
+                    Text(viewModel.isComplete ? "match.round_complete" : "match.connect_pairs")
                         .font(.title2.bold())
                         .foregroundStyle(Color.deepPurple)
 
                     Text(viewModel.isComplete
-                         ? "You matched every word."
-                         : "Choose a word, then choose its translation.")
+                         ? "match.all_matched"
+                         : "match.choose_pair")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -119,8 +119,8 @@ struct WordMatchView: View {
 
     private var matchingColumns: some View {
         HStack(alignment: .top, spacing: Spacing.md) {
-            optionColumn(title: "Words", pairs: viewModel.pairs, isWordColumn: true)
-            optionColumn(title: "Translations", pairs: viewModel.translationOptions, isWordColumn: false)
+            optionColumn(title: String(localized: "match.words"), pairs: viewModel.pairs, isWordColumn: true)
+            optionColumn(title: String(localized: "match.translations"), pairs: viewModel.translationOptions, isWordColumn: false)
         }
     }
 
@@ -179,8 +179,8 @@ struct WordMatchView: View {
         .buttonStyle(.plain)
         .disabled(isMatched || viewModel.isResolving)
         .opacity(isMatched ? 0.55 : 1)
-        .accessibilityLabel(isWord ? "Word: \(pair.word)" : "Translation: \(pair.translation)")
-        .accessibilityValue(isMatched ? "Matched" : isSelected ? "Selected" : "Not selected")
+        .accessibilityLabel(String(format: String(localized: isWord ? "accessibility.word_value" : "accessibility.translation_value"), isWord ? pair.word : pair.translation))
+        .accessibilityValue(isMatched ? String(localized: "match.matched") : isSelected ? String(localized: "accessibility.selected") : String(localized: "accessibility.not_selected"))
     }
 
     private func buttonBackground(isMatched: Bool, isSelected: Bool, isIncorrect: Bool) -> Color {
@@ -201,7 +201,7 @@ struct WordMatchView: View {
                 .font(.system(size: 72))
                 .foregroundStyle(.green)
 
-            PrimaryButton(title: "New round", systemImage: "arrow.clockwise") {
+            PrimaryButton(title: String(localized: "match.new_round"), systemImage: "arrow.clockwise") {
                 viewModel.startRound(from: languageWords)
             }
         }

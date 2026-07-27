@@ -11,10 +11,10 @@ enum ReviewStatus: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .new: "New"
-        case .learning: "Learning"
-        case .familiar: "Familiar"
-        case .mastered: "Mastered"
+        case .new: String(localized: "status.new")
+        case .learning: String(localized: "status.learning")
+        case .familiar: String(localized: "status.familiar")
+        case .mastered: String(localized: "status.mastered")
         }
     }
 }

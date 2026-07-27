@@ -128,7 +128,7 @@ struct ContextReviewFeedbackCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             Label(
-                feedback.isCorrect ? "Correct" : "Keep learning",
+                                feedback.isCorrect ? String(localized: "review.correct") : String(localized: "review.incorrect"),
                 systemImage: feedback.isCorrect ? "checkmark.circle.fill" : "arrow.counterclockwise.circle.fill"
             )
             .font(.title3.bold())
@@ -136,7 +136,7 @@ struct ContextReviewFeedbackCard: View {
 
             if mode == .recall, !feedback.isCorrect {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Your answer")
+                    Text("review.your_answer")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                     RecallMistakeText(
@@ -146,18 +146,18 @@ struct ContextReviewFeedbackCard: View {
                 }
             }
 
-            FeedbackRow(title: "Correct answer", systemImage: "checkmark", text: feedback.correctAnswer)
+            FeedbackRow(title: String(localized: "review.correct_answer"), systemImage: "checkmark", text: feedback.correctAnswer)
             if let originalSentence = feedback.originalSentence {
-                FeedbackRow(title: "Original sentence", systemImage: "text.quote", text: originalSentence)
+                FeedbackRow(title: String(localized: "review.original_sentence"), systemImage: "text.quote", text: originalSentence)
             }
             if let translation = feedback.translation {
-                FeedbackRow(title: "Translation", systemImage: "character.book.closed", text: translation)
+                FeedbackRow(title: String(localized: "review.translation"), systemImage: "character.book.closed", text: translation)
             }
             if let explanation = feedback.explanation {
-                FeedbackRow(title: "Why it fits", systemImage: "lightbulb", text: explanation)
+                FeedbackRow(title: String(localized: "review.why_fits"), systemImage: "lightbulb", text: explanation)
             }
             if let memoryTip = feedback.memoryTip {
-                FeedbackRow(title: "Memory tip", systemImage: "sparkles", text: memoryTip)
+                FeedbackRow(title: String(localized: "review.memory_tip"), systemImage: "sparkles", text: memoryTip)
             }
         }
         .padding(Spacing.xl)
@@ -202,14 +202,14 @@ struct RecallMistakeText: View {
     var body: some View {
         highlighted
             .font(.title3.monospaced().weight(.semibold))
-            .accessibilityLabel("You entered \(submitted). Correct answer: \(correct)")
+            .accessibilityLabel(String(format: String(localized: "accessibility.answer_feedback"), submitted, correct))
     }
 
     private var highlighted: Text {
         let entered = Array(submitted)
         let answer = Array(correct)
         guard !entered.isEmpty else {
-            return Text("No answer").foregroundColor(.answerForgot)
+            return Text("review.no_answer").foregroundColor(.answerForgot)
         }
 
         return entered.enumerated().reduce(Text("")) { result, pair in

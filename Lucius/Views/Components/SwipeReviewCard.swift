@@ -101,7 +101,7 @@ struct SwipeReviewCard: View {
 
             Spacer(minLength: Spacing.sm)
 
-            Label("Tap to reveal meaning", systemImage: "hand.tap")
+                Label("review.tap_to_reveal", systemImage: "hand.tap")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color.lavender)
         }
@@ -140,7 +140,7 @@ struct SwipeReviewCard: View {
                 isExpanded: $isMemoryCueExpanded
             )
 
-            Label("Swipe ← forgot · → know it · ↑ almost", systemImage: "hand.draw")
+            Label("review.swipe_directions", systemImage: "hand.draw")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.top, Spacing.xs)
@@ -371,7 +371,7 @@ struct VocabularyMemoryCueDisclosure: View {
                 }
                 .padding(.top, Spacing.md)
             } label: {
-                Label("Memory cue", systemImage: "sparkles")
+                Label("review.memory_tip", systemImage: "sparkles")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.deepPurple)
             }
