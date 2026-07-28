@@ -8,6 +8,8 @@ struct HomeView: View {
     @State private var dailyFocusViewModel = DailyFocusViewModel()
     @State private var isAddingWord = false
     @State private var isShowingDailyFocus = false
+    @State private var isShowingWidgetGuide = false
+    @State private var hasDismissedWidgetSuggestion = false
     @AppStorage(AppSettingsKeys.learningLanguageCode) private var learningLanguageCode = "en"
 
     var body: some View {
@@ -22,6 +24,17 @@ struct HomeView: View {
 
                     PrimaryButton(title: String(localized: "home.add_word"), systemImage: "plus") {
                         isAddingWord = true
+                    }
+
+                    if shouldShowWidgetSuggestion {
+                        AddWidgetEntryCard(
+                            preview: widgetPreview,
+                            isContextualSuggestion: true,
+                            onDismiss: dismissWidgetSuggestion
+                        ) {
+                            isShowingWidgetGuide = true
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     statsRow
@@ -55,10 +68,39 @@ struct HomeView: View {
                     ReviewView(dailyFocusSession: session)
                 }
             }
+            .sheet(isPresented: $isShowingWidgetGuide, onDismiss: dismissWidgetSuggestion) {
+                WidgetOnboardingView(preview: widgetPreview) {
+                    WidgetPromotionStore.dismiss()
+                    hasDismissedWidgetSuggestion = true
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
             .onAppear(perform: refresh)
             .onChange(of: learningLanguageCode) { _, _ in refresh() }
         }
         .tint(.lavender)
+    }
+
+    private var shouldShowWidgetSuggestion: Bool {
+        !hasDismissedWidgetSuggestion
+            && WidgetPromotionStore.shouldSuggest(
+                wordCount: viewModel.totalWordsCount,
+                onboardingCompleted: OnboardingStore.hasCompleted
+            )
+    }
+
+    private var widgetPreview: WidgetPreviewContent {
+        guard let word = viewModel.recentWords.first else { return .placeholder }
+        return WidgetPreviewContent(word: word.word, translation: word.translation)
+    }
+
+    private func dismissWidgetSuggestion() {
+        guard shouldShowWidgetSuggestion else { return }
+        WidgetPromotionStore.dismiss()
+        withAnimation(.easeOut) {
+            hasDismissedWidgetSuggestion = true
+        }
     }
 
     private var header: some View {

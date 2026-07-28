@@ -21,7 +21,7 @@ enum LuciusShared {
 /// A small, Codable summary of review state that the app writes and the
 /// widget reads. Crucially it carries the scheduled review dates, so the
 /// widget can recompute "due" over time without the app being launched.
-struct ReviewSnapshot: Codable {
+struct ReviewSnapshot: Codable, Equatable {
     var reviewDates: [Date]
     var streak: Int
     var totalWords: Int
@@ -197,7 +197,93 @@ enum SmartWordSelection {
     }
 }
 
+/// Resolves the displayed word and produces new persisted state without any
+/// dependency on SwiftData or WidgetKit. This keeps refresh behavior testable
+/// and identical in the app and extension.
+enum SmartWordSnapshotResolver {
+    static func displayedWord(
+        in snapshot: SmartWordSnapshot,
+        at date: Date = .now,
+        calendar: Calendar = .current
+    ) -> SharedVocabularyWord? {
+        if let selectionDay = snapshot.selectionDay,
+           calendar.isDate(selectionDay, inSameDayAs: date),
+           let selectedWordID = snapshot.selectedWordID,
+           let selected = snapshot.words.first(where: { $0.id == selectedWordID }) {
+            return selected
+        }
+
+        return SmartWordSelection.select(
+            from: snapshot.words,
+            now: date,
+            calendar: calendar,
+            languageCode: snapshot.words.first?.languageCode
+        )
+    }
+
+    static func updating(
+        previous: SmartWordSnapshot,
+        words: [SharedVocabularyWord],
+        interfaceLanguageCode: String,
+        copy: SmartWordCopy,
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) -> SmartWordSnapshot {
+        let today = calendar.startOfDay(for: now)
+        let previousWord = previous.selectedWordID.flatMap { id in
+            previous.words.first { $0.id == id }
+        }
+        let currentPreviousWord = previous.selectedWordID.flatMap { id in
+            words.first { $0.id == id }
+        }
+        let sameDay = previous.selectionDay.map {
+            calendar.isDate($0, inSameDayAs: today)
+        } ?? false
+        let selectionWasReviewed = previousWord.map { oldWord in
+            guard let currentPreviousWord else { return true }
+            return oldWord.reviewStatus != currentPreviousWord.reviewStatus
+                || oldWord.nextReviewDate != currentPreviousWord.nextReviewDate
+                || oldWord.mistakeCount != currentPreviousWord.mistakeCount
+                || oldWord.successfulReviewCount != currentPreviousWord.successfulReviewCount
+        } ?? true
+
+        let selected: SharedVocabularyWord?
+        if sameDay, let currentPreviousWord, !selectionWasReviewed {
+            selected = currentPreviousWord
+        } else {
+            let eligible = selectionWasReviewed
+                ? words.filter { $0.id != previous.selectedWordID }
+                : words
+            selected = SmartWordSelection.select(
+                from: eligible.isEmpty ? words : eligible,
+                now: now,
+                calendar: calendar,
+                languageCode: words.first?.languageCode
+            )
+        }
+
+        let stateChanged = previous.words != words
+            || previous.selectedWordID != selected?.id
+            || !sameDay
+            || previous.copy != copy
+            || previous.interfaceLanguageCode != interfaceLanguageCode
+
+        return SmartWordSnapshot(
+            words: words,
+            updatedAt: stateChanged ? now : previous.updatedAt,
+            interfaceLanguageCode: interfaceLanguageCode,
+            copy: copy,
+            selectedWordID: selected?.id,
+            selectionDay: today
+        )
+    }
+}
+
 enum SmartWordTimeline {
+    static func entryDates(from date: Date, calendar: Calendar = .current) -> [Date] {
+        [date, nextDayStart(after: date, calendar: calendar)]
+    }
+
     static func nextDayStart(after date: Date, calendar: Calendar = .current) -> Date {
         calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date)) ?? date.addingTimeInterval(86_400)
     }

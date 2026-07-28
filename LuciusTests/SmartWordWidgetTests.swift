@@ -18,7 +18,7 @@ final class SmartWordWidgetTests: XCTestCase {
         let words = [
             make("recent", status: "new", createdAt: now.addingTimeInterval(40)),
             make("learning", status: "learning", createdAt: now.addingTimeInterval(30)),
-            make("difficult", status: "familiar", mistakes: 2, createdAt: now.addingTimeInterval(20)),
+            make("difficult", status: "familiar", createdAt: now.addingTimeInterval(20), mistakes: 2),
             make("overdue", status: "familiar", nextReviewDate: now.addingTimeInterval(-60), createdAt: now)
         ]
 
@@ -61,7 +61,7 @@ final class SmartWordWidgetTests: XCTestCase {
 
     func testMasteredFallbackIsStableWithinDayAndCanChangeOnNextDay() {
         let words = (0..<5).map {
-            make("mastered-\($0)", status: "mastered", successfulReviews: 10, createdAt: now.addingTimeInterval(Double($0)))
+            make("mastered-\($0)", status: "mastered", createdAt: now.addingTimeInterval(Double($0)), successfulReviews: 10)
         }
 
         let first = SmartWordSelection.select(from: words, now: now, calendar: calendar)
@@ -75,6 +75,14 @@ final class SmartWordWidgetTests: XCTestCase {
         XCTAssertEqual(next, calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: newYearEve)))
     }
 
+    func testTimelineContainsNowAndNextLocalDayBoundary() {
+        let dates = SmartWordTimeline.entryDates(from: now, calendar: calendar)
+
+        XCTAssertEqual(dates.count, 2)
+        XCTAssertEqual(dates[0], now)
+        XCTAssertEqual(dates[1], SmartWordTimeline.nextDayStart(after: now, calendar: calendar))
+    }
+
     func testWordDeepLinkCarriesTheSelectedID() {
         let id = UUID()
         let url = LuciusShared.reviewURL(for: id)
@@ -86,14 +94,29 @@ final class SmartWordWidgetTests: XCTestCase {
         XCTAssertEqual(value, id.uuidString)
     }
 
-    func testRefreshAfterReviewAddAndDeleteUsesCurrentSnapshotWords() {
+    func testSameWordRemainsSelectedDuringCurrentDay() {
         let first = make("first", status: "learning", mistakes: 1)
         let second = make("second", status: "new", createdAt: now.addingTimeInterval(1))
-        let initial = SmartWordSnapshot(words: [first], updatedAt: now, interfaceLanguageCode: "en")
-        XCTAssertEqual(SmartWordSelection.select(from: initial.words, now: now, calendar: calendar)?.word, "first")
+        let initial = snapshot(words: [first, second], selected: first)
 
-        // A review can make the current word ineligible; the next snapshot
-        // then resolves to the newly added word without retaining stale IDs.
+        let updated = SmartWordSnapshotResolver.updating(
+            previous: initial,
+            words: [first, second],
+            interfaceLanguageCode: "en",
+            copy: .english,
+            now: now.addingTimeInterval(3_600),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(updated.selectedWordID, first.id)
+        XCTAssertEqual(SmartWordSnapshotResolver.displayedWord(in: updated, at: now, calendar: calendar), first)
+    }
+
+    func testRefreshAfterReviewSelectsNextEligibleWord() {
+        let first = make("first", status: "learning", mistakes: 1)
+        let second = make("second", status: "new", createdAt: now.addingTimeInterval(1))
+        let initial = snapshot(words: [first, second], selected: first)
+
         let afterReview = SharedVocabularyWord(
             id: first.id,
             word: first.word,
@@ -108,11 +131,77 @@ final class SmartWordWidgetTests: XCTestCase {
             successfulReviewCount: first.successfulReviewCount + 1,
             category: first.category
         )
-        let afterAdd = SmartWordSnapshot(words: [afterReview, second], updatedAt: now, interfaceLanguageCode: "en")
-        XCTAssertEqual(SmartWordSelection.select(from: afterAdd.words, now: now, calendar: calendar)?.word, "second")
+        let updated = SmartWordSnapshotResolver.updating(
+            previous: initial,
+            words: [afterReview, second],
+            interfaceLanguageCode: "en",
+            copy: .english,
+            now: now,
+            calendar: calendar
+        )
 
-        let afterDelete = SmartWordSnapshot(words: [second], updatedAt: now, interfaceLanguageCode: "en")
-        XCTAssertEqual(SmartWordSelection.select(from: afterDelete.words, now: now, calendar: calendar)?.word, "second")
+        XCTAssertEqual(updated.selectedWordID, second.id)
+    }
+
+    func testRefreshAfterAddingWordUsesNewWordWhenSnapshotWasEmpty() {
+        let added = make("added", status: "new")
+        let updated = SmartWordSnapshotResolver.updating(
+            previous: .empty,
+            words: [added],
+            interfaceLanguageCode: "en",
+            copy: .english,
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(updated.selectedWordID, added.id)
+        XCTAssertEqual(SmartWordSnapshotResolver.displayedWord(in: updated, at: now, calendar: calendar), added)
+    }
+
+    func testRefreshAfterDeletingDisplayedWordSelectsRemainingWord() {
+        let deleted = make("deleted", status: "learning", mistakes: 1)
+        let remaining = make("remaining", status: "new")
+        let initial = snapshot(words: [deleted, remaining], selected: deleted)
+        let updated = SmartWordSnapshotResolver.updating(
+            previous: initial,
+            words: [remaining],
+            interfaceLanguageCode: "en",
+            copy: .english,
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(updated.selectedWordID, remaining.id)
+        XCTAssertFalse(updated.words.contains { $0.id == deleted.id })
+    }
+
+    func testDeletingOnlyWordProducesEmptyState() {
+        let deleted = make("deleted", status: "learning")
+        let initial = snapshot(words: [deleted], selected: deleted)
+        let updated = SmartWordSnapshotResolver.updating(
+            previous: initial,
+            words: [],
+            interfaceLanguageCode: "en",
+            copy: .english,
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertNil(updated.selectedWordID)
+        XCTAssertNil(SmartWordSnapshotResolver.displayedWord(in: updated, at: now, calendar: calendar))
+    }
+
+    private func snapshot(
+        words: [SharedVocabularyWord],
+        selected: SharedVocabularyWord
+    ) -> SmartWordSnapshot {
+        SmartWordSnapshot(
+            words: words,
+            updatedAt: now,
+            interfaceLanguageCode: "en",
+            selectedWordID: selected.id,
+            selectionDay: calendar.startOfDay(for: now)
+        )
     }
 
     private func make(

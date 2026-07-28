@@ -6,10 +6,27 @@ import ImagePlayground
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = SettingsViewModel()
+    @State private var isShowingWidgetGuide = false
+    @Query(sort: \VocabularyWord.createdAt, order: .reverse) private var words: [VocabularyWord]
+
+    private var widgetPreview: WidgetPreviewContent {
+        guard let word = words.first(where: {
+            $0.languageCode == viewModel.learningLanguageCode
+        }) else { return .placeholder }
+        return WidgetPreviewContent(word: word.word, translation: word.translation)
+    }
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    AddWidgetEntryCard(preview: widgetPreview) {
+                        isShowingWidgetGuide = true
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 Section {
                     Picker("settings.learning_language", selection: $viewModel.learningLanguageCode) {
                         ForEach(viewModel.availableLanguages) { language in
@@ -104,6 +121,13 @@ struct SettingsView: View {
             .navigationTitle("settings.title")
             .task {
                 await viewModel.refreshPermissionStatus()
+            }
+            .sheet(isPresented: $isShowingWidgetGuide) {
+                WidgetOnboardingView(preview: widgetPreview) {
+                    WidgetPromotionStore.dismiss()
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
             }
         }
         .tint(.lavender)

@@ -1,14 +1,20 @@
 import SwiftUI
 
-/// App-wide palette: soft lavender accent on a warm, light background.
-/// The app always runs in light appearance (see `MainTabView`),
-/// so these fixed colors are safe.
+/// App-wide palette: soft lavender accent on a warm adaptive background.
 extension Color {
     static let lavender = Color(red: 0.55, green: 0.45, blue: 0.92)
-    static let lavenderSoft = Color(red: 0.91, green: 0.88, blue: 0.99)
-    static let deepPurple = Color(red: 0.33, green: 0.25, blue: 0.55)
-    static let appBackground = Color(red: 0.96, green: 0.95, blue: 0.99)
-    static let cardBackground = Color.white
+    static let lavenderSoft = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.20, green: 0.17, blue: 0.29, alpha: 1)
+            : UIColor(red: 0.91, green: 0.88, blue: 0.99, alpha: 1)
+    })
+    static let deepPurple = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.78, green: 0.72, blue: 0.96, alpha: 1)
+            : UIColor(red: 0.33, green: 0.25, blue: 0.55, alpha: 1)
+    })
+    static let appBackground = Color(uiColor: .systemGroupedBackground)
+    static let cardBackground = Color(uiColor: .secondarySystemGroupedBackground)
 
     /// Answer semantics, shared by the review buttons and swipe gestures.
     static let answerForgot = Color.red

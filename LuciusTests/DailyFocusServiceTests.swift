@@ -16,7 +16,7 @@ struct DailyFocusServiceTests {
     @Test func prioritizesOverdueThenDifficultLearningAndRecent() {
         let words = [
             VocabularyWord(word: "overdue", translation: "1", reviewStatus: .familiar, nextReviewDate: now.addingTimeInterval(-3_600), createdAt: now.addingTimeInterval(-5)),
-            VocabularyWord(word: "difficult", translation: "2", reviewStatus: .familiar, nextReviewDate: now.addingTimeInterval(86_400), mistakeCount: 4, createdAt: now.addingTimeInterval(-4)),
+            VocabularyWord(word: "difficult", translation: "2", reviewStatus: .familiar, nextReviewDate: now.addingTimeInterval(86_400), createdAt: now.addingTimeInterval(-4), mistakeCount: 4),
             VocabularyWord(word: "learning", translation: "3", reviewStatus: .learning, nextReviewDate: now.addingTimeInterval(43_200), createdAt: now.addingTimeInterval(-3)),
             VocabularyWord(word: "recent", translation: "4", reviewStatus: .new, createdAt: now.addingTimeInterval(-1)),
             VocabularyWord(word: "another", translation: "5", reviewStatus: .new, createdAt: now.addingTimeInterval(-2)),
@@ -26,7 +26,7 @@ struct DailyFocusServiceTests {
         let selected = DailyFocusService.selectWords(from: words, now: now, calendar: calendar)
 
         #expect(selected.count == 5)
-        #expect(selected.prefix(3).map(\.word) == ["overdue", "difficult", "learning"])
+        #expect(selected.prefix(3).map { $0.word } == ["overdue", "difficult", "learning"])
         #expect(selected.contains { $0.word == "recent" })
         #expect(!selected.contains { $0.word == "not-due" })
     }

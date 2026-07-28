@@ -41,9 +41,6 @@ struct MainTabView: View {
                 .tag(AppRouter.Tab.settings)
         }
         .tint(.lavender)
-        // The palette is built for a light, airy look — keep it
-        // consistent even when the device is in dark mode.
-        .preferredColorScheme(.light)
     }
 }
 

@@ -38,6 +38,8 @@ targets:
     sources:
       - LuciusWidget
       - path: Lucius/Shared/ReviewSnapshot.swift
+    resources:
+      - path: Lucius/Resources/Localization
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucius.app.widget

@@ -28,33 +28,17 @@ struct SmartWordProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<SmartWordEntry>) -> Void) {
         let snapshot = SharedStore.loadSmartWord()
         let now = Date.now
-        let nextDay = SmartWordTimeline.nextDayStart(after: now)
+        let dates = SmartWordTimeline.entryDates(from: now)
         completion(Timeline(
-            entries: [entry(at: now, from: snapshot), entry(at: nextDay, from: snapshot)],
+            entries: dates.map { entry(at: $0, from: snapshot) },
             policy: .atEnd
         ))
     }
 
     private func entry(at date: Date, from snapshot: SmartWordSnapshot) -> SmartWordEntry {
-        let calendar = Calendar.current
-        let selectedWord: SharedVocabularyWord?
-        if let selectionDay = snapshot.selectionDay,
-           calendar.isDate(selectionDay, inSameDayAs: date),
-           let selectedWordID = snapshot.selectedWordID,
-           let persistedWord = snapshot.words.first(where: { $0.id == selectedWordID }) {
-            selectedWord = persistedWord
-        } else {
-            selectedWord = SmartWordSelection.select(
-                from: snapshot.words,
-                now: date,
-                calendar: calendar,
-                languageCode: snapshot.words.first?.languageCode
-            )
-        }
-
         return SmartWordEntry(
             date: date,
-            word: selectedWord,
+            word: SmartWordSnapshotResolver.displayedWord(in: snapshot, at: date),
             copy: snapshot.copy
         )
     }
@@ -69,8 +53,8 @@ struct SmartWordWidget: Widget {
         // WidgetKit's gallery metadata is kept readable even before the app
         // has written its first localized shared snapshot. The on-device
         // widget content itself is localized by `SmartWordCopy`.
-        .configurationDisplayName("Smart Word")
-        .description("Learn one personalized word each day.")
+        .configurationDisplayName("smart_word.display_name")
+        .description("smart_word.description")
         .supportedFamilies([.systemSmall])
     }
 }
