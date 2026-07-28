@@ -148,6 +148,7 @@ final class OnboardingViewModel {
         }) {
             demoWasSaved = true
             OnboardingStore.markDemoSaved(languageCode: content.learningLanguageCode)
+            WidgetSync.update(context: context, forceSmartWordReload: true)
             return true
         }
 
@@ -171,6 +172,7 @@ final class OnboardingViewModel {
         }
         demoWasSaved = true
         OnboardingStore.markDemoSaved(languageCode: content.learningLanguageCode)
+        WidgetSync.update(context: context, forceSmartWordReload: true)
         return true
     }
 

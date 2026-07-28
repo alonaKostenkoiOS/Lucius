@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "Вивчайте одне персональне слово щодня.";
 "smart_word.title" = "Слово дня";
 "smart_word.tap_to_review" = "Торкніться для повторення";
+"smart_word.review_action" = "Повторити →";
+"smart_word.empty_title" = "Ваше перше слово вже чекає";
+"smart_word.open_action" = "Відкрити Lucius →";
 "smart_word.empty_message" = "Додайте перші слова, щоб почати навчання.";
 "smart_word.display_name" = "Розумне слово";
 "smart_word.description" = "Вивчайте одне персоналізоване слово щодня.";

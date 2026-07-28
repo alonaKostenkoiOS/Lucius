@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "Lerne jeden Tag ein persönliches Wort.";
 "smart_word.title" = "Wort des Tages";
 "smart_word.tap_to_review" = "Tippen zum Wiederholen";
+"smart_word.review_action" = "Wiederholen →";
+"smart_word.empty_title" = "Dein erstes Wort wartet";
+"smart_word.open_action" = "Lucius öffnen →";
 "smart_word.empty_message" = "Füge deine ersten Wörter hinzu, um mit dem Lernen zu beginnen.";
 "smart_word.display_name" = "Intelligentes Wort";
 "smart_word.description" = "Lerne jeden Tag ein personalisiertes Wort.";

@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "毎日、あなたに合った単語を学べます。";
 "smart_word.title" = "今日の単語";
 "smart_word.tap_to_review" = "タップして復習";
+"smart_word.review_action" = "復習する →";
+"smart_word.empty_title" = "最初の単語が待っています";
+"smart_word.open_action" = "Luciusを開く →";
 "smart_word.empty_message" = "最初の単語を追加して学習を始めましょう。";
 "smart_word.display_name" = "スマート単語";
 "smart_word.description" = "毎日、あなたに合った単語を1つ学びましょう。";

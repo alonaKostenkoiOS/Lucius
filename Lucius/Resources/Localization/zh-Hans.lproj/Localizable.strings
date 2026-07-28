@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "每天学习一个为你精选的单词。";
 "smart_word.title" = "今日单词";
 "smart_word.tap_to_review" = "轻点复习";
+"smart_word.review_action" = "复习 →";
+"smart_word.empty_title" = "你的第一个单词正在等待";
+"smart_word.open_action" = "打开 Lucius →";
 "smart_word.empty_message" = "添加第一个单词，开始学习。";
 "smart_word.display_name" = "智能单词";
 "smart_word.description" = "每天学习一个为你推荐的单词。";

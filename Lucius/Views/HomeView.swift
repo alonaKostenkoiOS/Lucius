@@ -4,6 +4,7 @@ import SwiftData
 /// Main screen: stats, the add-word call to action and recent words.
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var router
     @State private var viewModel = HomeViewModel()
     @State private var dailyFocusViewModel = DailyFocusViewModel()
     @State private var isAddingWord = false
@@ -76,7 +77,10 @@ struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
             }
-            .onAppear(perform: refresh)
+            .onAppear {
+                refresh()
+                if router.consumeAddWordRequest() { isAddingWord = true }
+            }
             .onChange(of: learningLanguageCode) { _, _ in refresh() }
         }
         .tint(.lavender)

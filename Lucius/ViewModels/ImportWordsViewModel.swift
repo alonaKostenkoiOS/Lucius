@@ -99,7 +99,7 @@ final class ImportWordsViewModel {
         }
 
         try? context.save()
-        WidgetSync.update(context: context)
+        WidgetSync.update(context: context, forceSmartWordReload: true)
         Haptics.success()
     }
 

@@ -13,11 +13,13 @@ final class AppRouter {
     var selectedTab: Tab = .home
     var pendingReviewWordID: UUID?
     private(set) var reviewRequestID = UUID()
+    private(set) var pendingAddWord = false
 
     /// Routes an incoming deep link (e.g. `lucius://review`) to a tab.
     func handle(_ url: URL) {
         switch url.host {
         case "review":
+            pendingAddWord = false
             reviewRequestID = UUID()
             pendingReviewWordID = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?
@@ -25,6 +27,10 @@ final class AppRouter {
                 .value
                 .flatMap(UUID.init(uuidString:))
             selectedTab = .review
+        case "add":
+            clearPendingReview()
+            pendingAddWord = true
+            selectedTab = .home
         case "match":
             clearPendingReview()
             selectedTab = .match
@@ -44,5 +50,11 @@ final class AppRouter {
     private func clearPendingReview() {
         pendingReviewWordID = nil
         reviewRequestID = UUID()
+    }
+
+    func consumeAddWordRequest() -> Bool {
+        guard pendingAddWord else { return false }
+        pendingAddWord = false
+        return true
     }
 }

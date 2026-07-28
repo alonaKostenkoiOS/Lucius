@@ -58,11 +58,15 @@ struct LuciusApp: App {
             }
             .task {
                 await loadingCoordinator.finishPreparation()
+                WidgetSync.update(context: modelContainer.mainContext)
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
                 loadingCoordinator.beginPreparation()
-                Task { await loadingCoordinator.finishPreparation() }
+                Task {
+                    await loadingCoordinator.finishPreparation()
+                    WidgetSync.update(context: modelContainer.mainContext)
+                }
             }
         }
         .modelContainer(modelContainer)

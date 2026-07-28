@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "Apprenez chaque jour un mot personnalisé.";
 "smart_word.title" = "Mot du jour";
 "smart_word.tap_to_review" = "Touchez pour réviser";
+"smart_word.review_action" = "Réviser →";
+"smart_word.empty_title" = "Votre premier mot vous attend";
+"smart_word.open_action" = "Ouvrir Lucius →";
 "smart_word.empty_message" = "Ajoutez vos premiers mots pour commencer à apprendre.";
 "smart_word.display_name" = "Mot intelligent";
 "smart_word.description" = "Apprenez un mot personnalisé chaque jour.";

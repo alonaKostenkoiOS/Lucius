@@ -262,7 +262,7 @@ struct SmartWordWidgetPreview: View {
 
             Spacer(minLength: 0)
 
-            Text("smart_word.tap_to_review")
+            Text("smart_word.review_action")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.lavender)
                 .lineLimit(1)

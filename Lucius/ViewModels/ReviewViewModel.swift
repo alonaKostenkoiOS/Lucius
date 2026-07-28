@@ -240,7 +240,7 @@ final class ReviewViewModel {
     ) {
         try? context.save()
         NotificationService.shared.scheduleReviewNotification(for: word)
-        WidgetSync.update(context: context)
+        WidgetSync.update(context: context, forceSmartWordReload: true)
 
         if outcome.didReachMastered {
             celebrate = true

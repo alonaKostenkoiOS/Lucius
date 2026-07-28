@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "Impara ogni giorno una parola personalizzata.";
 "smart_word.title" = "Parola di oggi";
 "smart_word.tap_to_review" = "Tocca per ripassare";
+"smart_word.review_action" = "Ripassa →";
+"smart_word.empty_title" = "La tua prima parola ti aspetta";
+"smart_word.open_action" = "Apri Lucius →";
 "smart_word.empty_message" = "Aggiungi le prime parole per iniziare a imparare.";
 "smart_word.display_name" = "Parola intelligente";
 "smart_word.description" = "Impara ogni giorno una parola personalizzata.";

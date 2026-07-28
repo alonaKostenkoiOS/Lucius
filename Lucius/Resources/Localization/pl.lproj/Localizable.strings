@@ -244,6 +244,9 @@
 "widget.smart_word.description" = "Ucz się codziennie jednego spersonalizowanego słowa.";
 "smart_word.title" = "Słowo na dziś";
 "smart_word.tap_to_review" = "Stuknij, aby powtórzyć";
+"smart_word.review_action" = "Powtórz →";
+"smart_word.empty_title" = "Twoje pierwsze słowo już czeka";
+"smart_word.open_action" = "Otwórz Lucius →";
 "smart_word.empty_message" = "Dodaj pierwsze słowa, aby rozpocząć naukę.";
 "smart_word.display_name" = "Inteligentne słowo";
 "smart_word.description" = "Ucz się codziennie jednego dopasowanego słowa.";

@@ -6,7 +6,7 @@ import WidgetKit
 /// Call `update` after any change that affects due counts or the streak.
 enum WidgetSync {
     @MainActor
-    static func update(context: ModelContext) {
+    static func update(context: ModelContext, forceSmartWordReload: Bool = false) {
         let fetchedWords = (try? context.fetch(FetchDescriptor<VocabularyWord>())) ?? []
         let languageCode = AppLanguageSettings.learningLanguageCode
         let words = fetchedWords.filter { $0.languageCode == languageCode }
@@ -25,48 +25,49 @@ enum WidgetSync {
         let previousReviewSnapshot = SharedStore.load()
         SharedStore.save(snapshot)
 
-        let smartWords = words.map {
-            SharedVocabularyWord(
-                id: $0.id,
-                word: $0.word,
-                translation: $0.translation,
-                languageCode: $0.languageCode,
-                reviewStatus: $0.reviewStatus.rawValue,
-                difficulty: $0.difficulty.rawValue,
-                nextReviewDate: $0.nextReviewDate,
-                createdAt: $0.createdAt,
-                updatedAt: $0.updatedAt,
-                mistakeCount: $0.mistakeCount,
-                successfulReviewCount: $0.successfulReviewCount,
-                category: nil
-            )
-        }.sorted { $0.id.uuidString < $1.id.uuidString }
         let now = Date.now
         let calendar = Calendar.current
+        let candidates = words.map {
+            WidgetWordSnapshot(
+                id: $0.id,
+                word: $0.word,
+                shortTranslation: shortTranslation($0.translation),
+                reviewPriority: priority(for: $0, now: now),
+                lastUpdated: $0.updatedAt
+            )
+        }.sorted { $0.id.uuidString < $1.id.uuidString }
         let previous = SharedStore.loadSmartWord()
-        let copy = SmartWordCopy(
-            title: String(localized: "smart_word.title"),
-            tapToReview: String(localized: "smart_word.tap_to_review"),
-            emptyMessage: String(localized: "smart_word.empty_message")
-        )
-        let smartSnapshot = SmartWordSnapshotResolver.updating(
+        let smartPayload = SmartWordPayloadResolver.update(
             previous: previous,
-            words: smartWords,
-            interfaceLanguageCode: Locale.current.identifier,
-            copy: copy,
+            candidates: candidates,
             now: now,
             calendar: calendar
         )
-        let smartWordChanged = smartSnapshot != previous
-        SharedStore.saveSmartWord(smartSnapshot)
+        let smartWordChanged = smartPayload != previous
+        SharedStore.saveSmartWord(smartPayload)
 
         // Reload only the widgets backed by this local snapshot. This keeps
         // unrelated widget families from being invalidated on every review.
         if snapshot != previousReviewSnapshot {
             WidgetCenter.shared.reloadTimelines(ofKind: "LuciusReviewWidget")
         }
-        if smartWordChanged {
+        if smartWordChanged || forceSmartWordReload {
             WidgetCenter.shared.reloadTimelines(ofKind: "LuciusSmartWordWidget")
         }
+    }
+
+    static func priority(for word: VocabularyWord, now: Date) -> WidgetReviewPriority {
+        if word.nextReviewDate.map({ $0 <= now }) == true { return .overdue }
+        if word.difficulty == .hard || word.mistakeCount > 0 { return .difficult }
+        if word.reviewStatus == .learning { return .learning }
+        if word.reviewStatus == .mastered { return .mastered }
+        return .recent
+    }
+
+    static func shortTranslation(_ translation: String) -> String {
+        let normalized = translation
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+        return String(normalized.prefix(160))
     }
 }

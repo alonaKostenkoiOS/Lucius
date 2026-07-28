@@ -33,7 +33,7 @@ struct AddWordIntent: AppIntent {
         try context.save()
 
         NotificationService.shared.scheduleReviewNotification(for: newWord)
-        WidgetSync.update(context: context)
+        WidgetSync.update(context: context, forceSmartWordReload: true)
 
         return .result(dialog: "Added “\(trimmedWord)” to Lucius.")
     }

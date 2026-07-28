@@ -34,7 +34,7 @@ struct SettingsView: View {
                         }
                     }
                     .onChange(of: viewModel.learningLanguageCode) {
-                        WidgetSync.update(context: modelContext)
+                        WidgetSync.update(context: modelContext, forceSmartWordReload: true)
                     }
 
                     Picker("settings.native_language", selection: $viewModel.translationLanguageCode) {
