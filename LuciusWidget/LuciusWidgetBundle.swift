@@ -5,5 +5,6 @@ import SwiftUI
 struct LuciusWidgetBundle: WidgetBundle {
     var body: some Widget {
         ReviewWidget()
+        SmartWordWidget()
     }
 }

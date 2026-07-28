@@ -16,6 +16,9 @@ struct SettingsView: View {
                             Text(language.name).tag(language.code)
                         }
                     }
+                    .onChange(of: viewModel.learningLanguageCode) {
+                        WidgetSync.update(context: modelContext)
+                    }
 
                     Picker("settings.native_language", selection: $viewModel.translationLanguageCode) {
                         ForEach(viewModel.availableLanguages.filter { $0.code != viewModel.learningLanguageCode }) { language in

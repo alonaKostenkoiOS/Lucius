@@ -58,14 +58,14 @@ struct VocabularyInsightsContent: View {
     }
 
     private var overviewSection: some View {
-        InsightsSection(title: "Vocabulary overview", systemImage: "books.vertical") {
+        InsightsSection(title: String(localized: "insights.overview"), systemImage: "books.vertical") {
             HStack(spacing: Spacing.lg) {
                 InsightProgressRing(
                     fraction: snapshot.overview.total == 0
                         ? 0
                         : Double(snapshot.overview.learned) / Double(snapshot.overview.total),
                     centerValue: "\(snapshot.overview.learned)",
-                    caption: "learned"
+                    caption: String(localized: "insights.learned")
                 )
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -81,19 +81,19 @@ struct VocabularyInsightsContent: View {
             }
 
             LazyVGrid(columns: grid, spacing: Spacing.md) {
-                InsightMetricCard(value: snapshot.overview.total, label: "Total", icon: "book.closed", tint: .lavender)
-                InsightMetricCard(value: snapshot.overview.new, label: "New", icon: "sparkles", tint: .blue)
-                InsightMetricCard(value: snapshot.overview.forgotten, label: "Forgotten", icon: "arrow.uturn.backward", tint: .red)
-                InsightMetricCard(value: snapshot.overview.dueToday, label: "Due today", icon: "clock", tint: .orange)
+                InsightMetricCard(value: snapshot.overview.total, label: String(localized: "insights.total"), icon: "book.closed", tint: .lavender)
+                InsightMetricCard(value: snapshot.overview.new, label: String(localized: "insights.new"), icon: "sparkles", tint: .blue)
+                InsightMetricCard(value: snapshot.overview.forgotten, label: String(localized: "insights.forgotten"), icon: "arrow.uturn.backward", tint: .red)
+                InsightMetricCard(value: snapshot.overview.dueToday, label: String(localized: "insights.due_today"), icon: "clock", tint: .orange)
             }
         }
     }
 
     private var progressSection: some View {
-        InsightsSection(title: "Learning progress", systemImage: "chart.xyaxis.line") {
-            Picker("Time range", selection: $selectedRange) {
+        InsightsSection(title: String(localized: "insights.learning_progress"), systemImage: "chart.xyaxis.line") {
+            Picker(String(localized: "insights.time_range"), selection: $selectedRange) {
                 ForEach(InsightsTimeRange.allCases) { range in
-                    Text(range.rawValue).tag(range)
+                    Text(range.localizedTitle).tag(range)
                 }
             }
             .pickerStyle(.segmented)
@@ -101,23 +101,23 @@ struct VocabularyInsightsContent: View {
             let points = snapshot.chartPoints[selectedRange] ?? []
             Chart(points) { point in
                 BarMark(
-                    x: .value("Date", point.date, unit: chartUnit),
-                    y: .value("Reviews", point.reviews)
+                    x: .value(String(localized: "insights.chart.date"), point.date, unit: chartUnit),
+                    y: .value(String(localized: "insights.chart.reviews"), point.reviews)
                 )
                 .foregroundStyle(Color.lavender.opacity(0.35))
                 .cornerRadius(3)
 
                 LineMark(
-                    x: .value("Date", point.date, unit: chartUnit),
-                    y: .value("Words learned", point.learned)
+                    x: .value(String(localized: "insights.chart.date"), point.date, unit: chartUnit),
+                    y: .value(String(localized: "insights.chart.words_learned"), point.learned)
                 )
                 .foregroundStyle(Color.deepPurple)
                 .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                 .interpolationMethod(.catmullRom)
 
                 PointMark(
-                    x: .value("Date", point.date, unit: chartUnit),
-                    y: .value("Words learned", point.learned)
+                    x: .value(String(localized: "insights.chart.date"), point.date, unit: chartUnit),
+                    y: .value(String(localized: "insights.chart.words_learned"), point.learned)
                 )
                 .foregroundStyle(Color.deepPurple)
             }
@@ -126,14 +126,14 @@ struct VocabularyInsightsContent: View {
             .chartLegend(.hidden)
 
             HStack(spacing: Spacing.lg) {
-                InsightLegend(color: .deepPurple, label: "Words learned")
-                InsightLegend(color: .lavender.opacity(0.45), label: "Reviews")
+                InsightLegend(color: .deepPurple, label: String(localized: "insights.words_learned"))
+                InsightLegend(color: .lavender.opacity(0.45), label: String(localized: "insights.reviews"))
                 Spacer()
             }
 
             HStack(spacing: Spacing.md) {
-                InsightMetricCard(value: snapshot.totalReviews, label: "Reviews", icon: "checkmark.circle", tint: .lavender)
-                InsightMetricCard(value: snapshot.streak, label: "Day streak", icon: "flame.fill", tint: .orange)
+                InsightMetricCard(value: snapshot.totalReviews, label: String(localized: "insights.reviews"), icon: "checkmark.circle", tint: .lavender)
+                InsightMetricCard(value: snapshot.streak, label: String(localized: "insights.day_streak_short"), icon: "flame.fill", tint: .orange)
             }
         }
     }
@@ -147,7 +147,7 @@ struct VocabularyInsightsContent: View {
     }
 
     private func cefrSection(_ values: [VocabularyAnalyticsSnapshot.CEFRStat]) -> some View {
-        InsightsSection(title: "CEFR distribution", systemImage: "chart.bar.fill") {
+        InsightsSection(title: String(localized: "insights.cefr_distribution"), systemImage: "chart.bar.fill") {
             ForEach(values) { item in
                 VStack(spacing: Spacing.xs) {
                     HStack {
@@ -182,7 +182,7 @@ struct VocabularyInsightsContent: View {
     }
 
     private var weakAreasSection: some View {
-        InsightsSection(title: "Weak areas", systemImage: "scope") {
+        InsightsSection(title: String(localized: "insights.weak_areas"), systemImage: "scope") {
             if let hardest = snapshot.hardestPartsOfSpeech.first {
                 HStack(spacing: Spacing.md) {
                     Image(systemName: "textformat.abc")
@@ -228,25 +228,25 @@ struct VocabularyInsightsContent: View {
     }
 
     private var learningSpeedSection: some View {
-        InsightsSection(title: "Learning speed", systemImage: "gauge.with.dots.needle.67percent") {
+        InsightsSection(title: String(localized: "insights.learning_speed"), systemImage: "gauge.with.dots.needle.67percent") {
             LazyVGrid(columns: grid, spacing: Spacing.md) {
                 if let days = snapshot.averageMemorizationDays {
                     InsightValueCard(
                         value: days.formatted(.number.precision(.fractionLength(1))),
-                        unit: "days to memorize",
+                        unit: String(localized: "insights.days_to_memorize"),
                         tint: .blue
                     )
                 }
                 if let reviews = snapshot.averageSuccessfulReviewsToMastery {
                     InsightValueCard(
                         value: reviews.formatted(.number.precision(.fractionLength(1))),
-                        unit: "reviews to mastery",
+                        unit: String(localized: "insights.reviews_to_mastery"),
                         tint: .purple
                     )
                 }
                 InsightValueCard(
                     value: snapshot.dailyLearningPace.formatted(.number.precision(.fractionLength(1))),
-                    unit: "new words / day",
+                    unit: String(localized: "insights.new_words_per_day"),
                     tint: .green
                 )
             }
@@ -257,21 +257,21 @@ struct VocabularyInsightsContent: View {
         VStack(spacing: Spacing.md) {
             InsightCallout(
                 icon: "brain.head.profile",
-                text: "You remember \(Int(snapshot.reviewAccuracy * 100))% of reviewed words.",
+                text: String(format: String(localized: "insights.remembered_message"), Int(snapshot.reviewAccuracy * 100)),
                 tint: .lavender
             )
 
             if let weakest = snapshot.hardestPartsOfSpeech.first {
                 InsightCallout(
                     icon: "scope",
-                    text: "\(weakest.name) are your weakest category right now.",
+                    text: String(format: String(localized: "insights.weak_category_message"), weakest.name),
                     tint: .orange
                 )
             }
 
             InsightCallout(
                 icon: "bolt.fill",
-                text: "You learn about \(snapshot.dailyLearningPace.formatted(.number.precision(.fractionLength(1)))) new words per day.",
+                text: String(format: String(localized: "insights.learning_pace_message"), snapshot.dailyLearningPace.formatted(.number.precision(.fractionLength(1)))),
                 tint: .green
             )
         }
