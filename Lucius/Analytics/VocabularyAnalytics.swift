@@ -7,6 +7,14 @@ enum InsightsTimeRange: String, CaseIterable, Identifiable, Hashable {
     case monthly = "Monthly"
 
     var id: String { rawValue }
+
+    var localizedTitle: String {
+        switch self {
+        case .daily: String(localized: "insights.range.daily")
+        case .weekly: String(localized: "insights.range.weekly")
+        case .monthly: String(localized: "insights.range.monthly")
+        }
+    }
 }
 
 enum CEFRLevel: String, CaseIterable, Codable, Identifiable, Hashable {
@@ -98,7 +106,7 @@ struct VocabularyAnalyticsSnapshot {
             cefrDistribution: zip(CEFRLevel.allCases, cefrCounts).map {
                 CEFRStat(level: $0.0, count: $0.1, percentage: Double($0.1) / Double(cefrTotal))
             },
-            hardestPartsOfSpeech: [WeakPartOfSpeech(name: "Verbs", mistakeCount: 21)],
+            hardestPartsOfSpeech: [WeakPartOfSpeech(name: String(localized: "insights.part_of_speech.verbs"), mistakeCount: 21)],
             mostForgottenWords: [
                 WeakWord(id: UUID(), word: "withstand", translation: "витримувати", mistakeCount: 7),
                 WeakWord(id: UUID(), word: "dwindle", translation: "скорочуватися", mistakeCount: 5),
@@ -334,11 +342,11 @@ private enum LocalLinguisticAnalyzer {
         guard let tag = tagger.tag(at: index, unit: .word, scheme: .lexicalClass).0 else { return nil }
 
         switch tag {
-        case .verb: return "Verbs"
-        case .noun: return "Nouns"
-        case .adjective: return "Adjectives"
-        case .adverb: return "Adverbs"
-        case .pronoun: return "Pronouns"
+        case .verb: return String(localized: "insights.part_of_speech.verbs")
+        case .noun: return String(localized: "insights.part_of_speech.nouns")
+        case .adjective: return String(localized: "insights.part_of_speech.adjectives")
+        case .adverb: return String(localized: "insights.part_of_speech.adverbs")
+        case .pronoun: return String(localized: "insights.part_of_speech.pronouns")
         default: return nil
         }
     }

@@ -7,6 +7,15 @@ enum LuciusShared {
     static let snapshotKey = "reviewSnapshot"
     /// Deep link the widget opens to jump straight into a review session.
     static let reviewURL = URL(string: "lucius://review")!
+    static let homeURL = URL(string: "lucius://home")!
+
+    static func reviewURL(for wordID: UUID) -> URL {
+        var components = URLComponents()
+        components.scheme = "lucius"
+        components.host = "review"
+        components.queryItems = [URLQueryItem(name: "word", value: wordID.uuidString)]
+        return components.url ?? reviewURL
+    }
 }
 
 /// A small, Codable summary of review state that the app writes and the
@@ -32,11 +41,175 @@ struct ReviewSnapshot: Codable {
     }
 }
 
+/// The small, Codable representation shared with WidgetKit. Keeping this
+/// independent from SwiftData lets the extension start instantly and avoids
+/// opening the app's model container in a separate process.
+struct SharedVocabularyWord: Codable, Equatable, Identifiable {
+    let id: UUID
+    let word: String
+    let translation: String
+    let languageCode: String
+    let reviewStatus: String
+    let difficulty: String
+    let nextReviewDate: Date?
+    let createdAt: Date
+    let updatedAt: Date
+    let mistakeCount: Int
+    let successfulReviewCount: Int
+    let category: String?
+}
+
+struct SmartWordCopy: Codable, Equatable {
+    let title: String
+    let tapToReview: String
+    let emptyMessage: String
+
+    static let english = SmartWordCopy(
+        title: "Today's Word",
+        tapToReview: "Tap to review",
+        emptyMessage: "Add your first words to start learning."
+    )
+}
+
+struct SmartWordSnapshot: Codable, Equatable {
+    var words: [SharedVocabularyWord]
+    var updatedAt: Date
+    var interfaceLanguageCode: String
+    var copy: SmartWordCopy
+    var selectedWordID: UUID?
+    var selectionDay: Date?
+
+    init(
+        words: [SharedVocabularyWord],
+        updatedAt: Date,
+        interfaceLanguageCode: String,
+        copy: SmartWordCopy = .english,
+        selectedWordID: UUID? = nil,
+        selectionDay: Date? = nil
+    ) {
+        self.words = words
+        self.updatedAt = updatedAt
+        self.interfaceLanguageCode = interfaceLanguageCode
+        self.copy = copy
+        self.selectedWordID = selectedWordID
+        self.selectionDay = selectionDay
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case words, updatedAt, interfaceLanguageCode, copy, selectedWordID, selectionDay
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        words = try container.decodeIfPresent([SharedVocabularyWord].self, forKey: .words) ?? []
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
+        interfaceLanguageCode = try container.decodeIfPresent(String.self, forKey: .interfaceLanguageCode) ?? "en"
+        copy = try container.decodeIfPresent(SmartWordCopy.self, forKey: .copy) ?? .english
+        selectedWordID = try container.decodeIfPresent(UUID.self, forKey: .selectedWordID)
+        selectionDay = try container.decodeIfPresent(Date.self, forKey: .selectionDay)
+    }
+
+    static let empty = SmartWordSnapshot(
+        words: [],
+        updatedAt: .distantPast,
+        interfaceLanguageCode: "en",
+        copy: .english,
+        selectedWordID: nil,
+        selectionDay: nil
+    )
+}
+
+/// Pure selection rules used by both the app tests and the widget provider.
+/// The selected item is stable for a local calendar day: the only fallback
+/// that uses a day-dependent choice is the final mastered-word branch.
+enum SmartWordSelection {
+    static func select(
+        from words: [SharedVocabularyWord],
+        now: Date = .now,
+        calendar: Calendar = .current,
+        languageCode: String? = nil
+    ) -> SharedVocabularyWord? {
+        let languageWords = words.filter { languageCode == nil || $0.languageCode == languageCode }
+
+        var unique: [SharedVocabularyWord] = []
+        var seen = Set<UUID>()
+        for word in languageWords where seen.insert(word.id).inserted {
+            unique.append(word)
+        }
+
+        let overdue = unique.filter { $0.nextReviewDate.map { $0 <= now } ?? false }
+        let difficult = unique.filter {
+            $0.difficulty == "hard" || $0.mistakeCount > 0
+        }
+        let learning = unique.filter { $0.reviewStatus == "learning" }
+        let recent = unique.filter {
+            $0.successfulReviewCount == 0 && $0.reviewStatus != "mastered"
+        }
+
+        func first(
+            from candidates: [SharedVocabularyWord],
+            sortedBy areInOrder: (SharedVocabularyWord, SharedVocabularyWord) -> Bool
+        ) -> SharedVocabularyWord? {
+            candidates.sorted(by: areInOrder).first
+        }
+
+        if let word = first(from: overdue, sortedBy: priorityDateOrder) { return word }
+        if let word = first(from: difficult, sortedBy: difficultyOrder) { return word }
+        if let word = first(from: learning, sortedBy: learningOrder) { return word }
+        if let word = first(from: recent, sortedBy: recentOrder) { return word }
+
+        let mastered = unique.filter { $0.reviewStatus == "mastered" }
+        guard !mastered.isEmpty else { return nil }
+        let daySeed = calendar.ordinality(of: .day, in: .era, for: calendar.startOfDay(for: now)) ?? 0
+        let index = abs(daySeed) % mastered.count
+        return mastered.sorted { stableScore($0.id, seed: daySeed) < stableScore($1.id, seed: daySeed) }[index]
+    }
+
+    private static func priorityDateOrder(_ lhs: SharedVocabularyWord, _ rhs: SharedVocabularyWord) -> Bool {
+        let lhsDate = lhs.nextReviewDate ?? .distantPast
+        let rhsDate = rhs.nextReviewDate ?? .distantPast
+        if lhsDate != rhsDate { return lhsDate < rhsDate }
+        if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt < rhs.updatedAt }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private static func difficultyOrder(_ lhs: SharedVocabularyWord, _ rhs: SharedVocabularyWord) -> Bool {
+        if lhs.mistakeCount != rhs.mistakeCount { return lhs.mistakeCount > rhs.mistakeCount }
+        if lhs.difficulty != rhs.difficulty { return lhs.difficulty == "hard" }
+        if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt < rhs.updatedAt }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private static func learningOrder(_ lhs: SharedVocabularyWord, _ rhs: SharedVocabularyWord) -> Bool {
+        if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt < rhs.updatedAt }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private static func recentOrder(_ lhs: SharedVocabularyWord, _ rhs: SharedVocabularyWord) -> Bool {
+        if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private static func stableScore(_ id: UUID, seed: Int) -> UInt64 {
+        id.uuidString.utf8.reduce(UInt64(abs(seed))) { partial, byte in
+            partial &* 31 &+ UInt64(byte)
+        }
+    }
+}
+
+enum SmartWordTimeline {
+    static func nextDayStart(after date: Date, calendar: Calendar = .current) -> Date {
+        calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date)) ?? date.addingTimeInterval(86_400)
+    }
+}
+
 /// Reads and writes the snapshot in the shared App Group container.
 enum SharedStore {
     private static var defaults: UserDefaults? {
         UserDefaults(suiteName: LuciusShared.appGroup)
     }
+
+    private static let smartWordKey = "smartWordSnapshot"
 
     static func save(_ snapshot: ReviewSnapshot) {
         guard let defaults, let data = try? JSONEncoder().encode(snapshot) else { return }
@@ -47,6 +220,19 @@ enum SharedStore {
         guard let defaults,
               let data = defaults.data(forKey: LuciusShared.snapshotKey),
               let snapshot = try? JSONDecoder().decode(ReviewSnapshot.self, from: data)
+        else { return .empty }
+        return snapshot
+    }
+
+    static func saveSmartWord(_ snapshot: SmartWordSnapshot) {
+        guard let defaults, let data = try? JSONEncoder().encode(snapshot) else { return }
+        defaults.set(data, forKey: smartWordKey)
+    }
+
+    static func loadSmartWord() -> SmartWordSnapshot {
+        guard let defaults,
+              let data = defaults.data(forKey: smartWordKey),
+              let snapshot = try? JSONDecoder().decode(SmartWordSnapshot.self, from: data)
         else { return .empty }
         return snapshot
     }

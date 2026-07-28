@@ -20,6 +20,10 @@ struct HomeView: View {
                         isShowingDailyFocus = true
                     }
 
+                    PrimaryButton(title: String(localized: "home.add_word"), systemImage: "plus") {
+                        isAddingWord = true
+                    }
+
                     statsRow
 
                     if viewModel.totalWordsCount > 0 {
@@ -32,14 +36,11 @@ struct HomeView: View {
                         ActivityHeatmap(activity: viewModel.activity, streak: viewModel.streak)
                     }
 
-                    PrimaryButton(title: String(localized: "home.add_word"), systemImage: "plus") {
-                        isAddingWord = true
-                    }
-
                     recentWordsSection
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
+                .padding(.bottom, 16)
             }
             .background(AppBackgroundGradient())
             .toolbar(.hidden, for: .navigationBar)

@@ -35,9 +35,9 @@ struct StatCardView: View {
 
 #Preview {
     HStack(spacing: 12) {
-        StatCardView(value: 24, label: "Total words", systemImage: "book.closed")
-        StatCardView(value: 5, label: "Due today", systemImage: "clock", tint: .orange)
-        StatCardView(value: 8, label: "Mastered", systemImage: "checkmark.seal", tint: .green)
+        StatCardView(value: 24, label: String(localized: "home.total_words"), systemImage: "book.closed")
+        StatCardView(value: 5, label: String(localized: "home.due_today"), systemImage: "clock", tint: .orange)
+        StatCardView(value: 8, label: String(localized: "home.mastered"), systemImage: "checkmark.seal", tint: .green)
     }
     .padding()
     .background(Color.appBackground)

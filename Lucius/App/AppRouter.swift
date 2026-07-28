@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Drives top-level navigation so external entry points (widget deep links,
@@ -10,16 +11,38 @@ final class AppRouter {
     }
 
     var selectedTab: Tab = .home
+    var pendingReviewWordID: UUID?
+    private(set) var reviewRequestID = UUID()
 
     /// Routes an incoming deep link (e.g. `lucius://review`) to a tab.
     func handle(_ url: URL) {
         switch url.host {
-        case "review": selectedTab = .review
-        case "match": selectedTab = .match
-        case "insights": selectedTab = .insights
-        case "home": selectedTab = .home
-        case "settings": selectedTab = .settings
+        case "review":
+            reviewRequestID = UUID()
+            pendingReviewWordID = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first(where: { $0.name == "word" || $0.name == "wordID" })?
+                .value
+                .flatMap(UUID.init(uuidString:))
+            selectedTab = .review
+        case "match":
+            clearPendingReview()
+            selectedTab = .match
+        case "insights":
+            clearPendingReview()
+            selectedTab = .insights
+        case "home":
+            clearPendingReview()
+            selectedTab = .home
+        case "settings":
+            clearPendingReview()
+            selectedTab = .settings
         default: break
         }
+    }
+
+    private func clearPendingReview() {
+        pendingReviewWordID = nil
+        reviewRequestID = UUID()
     }
 }

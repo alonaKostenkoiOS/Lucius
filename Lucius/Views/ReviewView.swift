@@ -14,18 +14,20 @@ struct ReviewView: View {
     @State private var usageSentence = ""
     @State private var flashcardRevealed = false
     @FocusState private var focusedField: InputField?
+    private let reviewWordID: UUID?
 
     private enum InputField { case answer, usage }
 
-    init(dailyFocusSession: DailyFocusSession? = nil) {
+    init(dailyFocusSession: DailyFocusSession? = nil, reviewWordID: UUID? = nil) {
         self.dailyFocusSession = dailyFocusSession
+        self.reviewWordID = reviewWordID
         let audioAvailable = SpeechService.shared.isAvailable(
             languageCode: AppLanguageSettings.learningLanguageCode
         )
         _selectedModes = State(
             initialValue: ReviewModePreferences.load(audioAvailable: audioAvailable)
         )
-        _sessionStarted = State(initialValue: dailyFocusSession != nil)
+        _sessionStarted = State(initialValue: dailyFocusSession != nil || reviewWordID != nil)
     }
 
     private var audioAvailable: Bool {
@@ -75,9 +77,13 @@ struct ReviewView: View {
                 guard !sessionStarted else { return }
                 selectedModes = ReviewModePreferences.load(audioAvailable: audioAvailable)
             }
-            .task(id: dailyFocusSession?.id) {
-                guard isDailyFocus, !dailyFocusDidLoad else { return }
-                startDailyFocus()
+            .task(id: reviewTaskID) {
+                guard !dailyFocusDidLoad else { return }
+                if isDailyFocus {
+                    startDailyFocus()
+                } else if let reviewWordID {
+                    startTargetedReview(wordID: reviewWordID)
+                }
             }
         }
         .tint(.lavender)
@@ -342,6 +348,10 @@ struct ReviewView: View {
 
     private var isDailyFocus: Bool { dailyFocusSession != nil }
 
+    private var reviewTaskID: UUID? {
+        dailyFocusSession?.id ?? reviewWordID
+    }
+
     private func startSession() {
         ReviewModePreferences.save(selectedModes)
         viewModel.loadDueWords(
@@ -379,6 +389,41 @@ struct ReviewView: View {
             modeSequence: DailyFocusService.modeSequence(audioAvailable: audioAvailable),
             modeSequenceOffset: session.completedIDs.intersection(Set(session.wordIDs)).count
         )
+        dailyFocusDidLoad = true
+    }
+
+    private func startTargetedReview(wordID: UUID) {
+        let allWords = (try? modelContext.fetch(FetchDescriptor<VocabularyWord>())) ?? []
+        let languageWords = allWords.filter { $0.languageCode == learningLanguageCode }
+
+        if let word = languageWords.first(where: { $0.id == wordID }) {
+            viewModel.loadWords(
+                [word],
+                vocabulary: languageWords,
+                selectedModes: ReviewModePreferences.load(audioAvailable: audioAvailable),
+                audioAvailable: audioAvailable
+            )
+        } else {
+            // The word may have been deleted after the widget timeline was
+            // generated. Reuse Daily Focus' local priority rules to open the
+            // next eligible word instead of failing.
+            if let fallback = DailyFocusService
+                .selectWords(from: languageWords, now: .now)
+                .first {
+                viewModel.loadWords(
+                    [fallback],
+                    vocabulary: languageWords,
+                    selectedModes: ReviewModePreferences.load(audioAvailable: audioAvailable),
+                    audioAvailable: audioAvailable
+                )
+            } else {
+                viewModel.loadDueWords(
+                    context: modelContext,
+                    selectedModes: ReviewModePreferences.load(audioAvailable: audioAvailable),
+                    audioAvailable: audioAvailable
+                )
+            }
+        }
         dailyFocusDidLoad = true
     }
 

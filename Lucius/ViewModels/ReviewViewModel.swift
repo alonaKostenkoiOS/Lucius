@@ -56,12 +56,13 @@ final class ReviewViewModel {
 
     func loadWords(
         _ words: [VocabularyWord],
+        vocabulary sourceVocabulary: [VocabularyWord]? = nil,
         selectedModes: Set<ReviewPracticeMode>,
         audioAvailable: Bool,
         modeSequence: [ReviewPracticeMode] = [],
         modeSequenceOffset: Int = 0
     ) {
-        vocabulary = words
+        vocabulary = sourceVocabulary ?? words
         var seen = Set<UUID>()
         queue = words.filter { seen.insert($0.id).inserted }
         self.selectedModes = selectedModes

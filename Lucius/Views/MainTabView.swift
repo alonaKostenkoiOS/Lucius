@@ -15,7 +15,8 @@ struct MainTabView: View {
                 }
                 .tag(AppRouter.Tab.home)
 
-            ReviewView()
+            ReviewView(reviewWordID: router.pendingReviewWordID)
+                .id(router.reviewRequestID)
                 .tabItem {
                     Label("tab.review", systemImage: "rectangle.stack")
                 }
