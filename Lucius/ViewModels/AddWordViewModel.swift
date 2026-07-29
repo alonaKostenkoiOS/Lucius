@@ -5,6 +5,22 @@ import SwiftData
 @Observable
 @MainActor
 final class AddWordViewModel {
+    enum SourceKind: String, CaseIterable, Identifiable {
+        case book, movie, podcast, article, website, other
+        var id: String { rawValue }
+
+        var localizedTitle: String {
+            switch self {
+            case .book: String(localized: "word.flow.source.book")
+            case .movie: String(localized: "word.flow.source.movie")
+            case .podcast: String(localized: "word.flow.source.podcast")
+            case .article: String(localized: "word.flow.source.article")
+            case .website: String(localized: "word.flow.source.website")
+            case .other: String(localized: "word.flow.source.other")
+            }
+        }
+    }
+
     var word = ""
     var translation = ""
     var example = ""
@@ -12,6 +28,10 @@ final class AddWordViewModel {
     var bookTitle = ""
     var chapter = ""
     var difficulty: WordDifficulty = .medium
+    var sourceKind: SourceKind?
+    var shouldGenerateScene = false
+    private(set) var isTranslating = false
+    private(set) var translationFailed = false
     let languageCode = AppLanguageSettings.learningLanguageCode
 
     var canSave: Bool {
@@ -24,6 +44,34 @@ final class AddWordViewModel {
 
     func applyScannedContext(_ text: String) {
         example = normalizedScannedText(text)
+    }
+
+    func wordDidChange() {
+        isTranslating = false
+        translationFailed = false
+        translation = ""
+    }
+
+    @discardableResult
+    func translateAutomatically(expectedWord: String) async -> Bool {
+        let cleaned = trimmed(expectedWord)
+        guard !cleaned.isEmpty, cleaned == trimmed(word) else { return false }
+        isTranslating = true
+        translationFailed = false
+        defer { isTranslating = false }
+
+        do {
+            let result = try await TranslationService.shared.translate(cleaned)
+            guard cleaned == trimmed(word), !Task.isCancelled else { return false }
+            translation = result
+            return true
+        } catch is CancellationError {
+            return false
+        } catch {
+            guard cleaned == trimmed(word) else { return false }
+            translationFailed = true
+            return false
+        }
     }
 
     private func normalizedScannedText(_ text: String) -> String {
