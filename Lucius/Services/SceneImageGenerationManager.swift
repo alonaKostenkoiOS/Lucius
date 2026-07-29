@@ -40,6 +40,7 @@ final class SceneImageGenerationManager {
     }
 
     func generateImage(for word: VocabularyWord) {
+        guard AppFeatures.imageGenerationEnabled else { return }
         let wordID = word.id
         guard !generatingWordIDs.contains(wordID) else { return }
 

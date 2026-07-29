@@ -72,7 +72,7 @@ final class HomeViewModel {
     /// consecutive-day streak from a set of review timestamps.
     static func activitySummary(
         reviewDates: [Date],
-        days: Int = heatmapDays,
+        days: Int = 91,
         now: Date = .now,
         calendar: Calendar = .current
     ) -> (activity: [DayActivity], streak: Int) {

@@ -31,7 +31,12 @@ enum DailyFocusService {
         let overdue = unique.filter { ($0.nextReviewDate ?? .distantFuture) <= now }
         let difficult = unique.filter { $0.difficulty == .hard || $0.mistakeCount > 0 }
         let learning = unique.filter { $0.reviewStatus == .learning }
-        let recent = unique.filter { $0.successfulReviewCount == 0 }
+        // A scheduled familiar word is not "recently added" merely because it
+        // has no successful reviews yet. Keep this bucket limited to genuinely
+        // new cards so words that are not due cannot displace eligible work.
+        let recent = unique.filter {
+            $0.reviewStatus == .new && $0.successfulReviewCount == 0
+        }
 
         var result: [VocabularyWord] = []
         var seen = Set<UUID>()

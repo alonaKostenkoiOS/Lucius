@@ -186,8 +186,10 @@ struct AddWordView: View {
                     .flowField()
                 actionButton("word.flow.continue", icon: "arrow.right") { advance(to: .source) }
             } else {
-                choice("word.flow.generate_scene", icon: "photo.badge.plus") {
-                    viewModel.shouldGenerateScene = true; advance(to: .source)
+                if AppFeatures.imageGenerationEnabled {
+                    choice("word.flow.generate_scene", icon: "photo.badge.plus") {
+                        viewModel.shouldGenerateScene = true; advance(to: .source)
+                    }
                 }
                 choice("word.flow.write_scene", icon: "pencil") {
                     visualInputVisible = true; focusedField = .visual
@@ -374,7 +376,9 @@ struct AddWordView: View {
 
     private func collectWord() {
         guard let saved = viewModel.save(context: modelContext) else { return }
-        if viewModel.shouldGenerateScene { SceneImageGenerationManager.shared.generateImage(for: saved) }
+        if AppFeatures.imageGenerationEnabled && viewModel.shouldGenerateScene {
+            SceneImageGenerationManager.shared.generateImage(for: saved)
+        }
         focusedField = nil
         Haptics.success()
         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { collected = true }

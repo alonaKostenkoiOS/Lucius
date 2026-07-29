@@ -95,7 +95,7 @@ struct HomeViewModelTests {
             word: "serendipity"
         )
 
-        #expect(clue == "______ brought them together.")
+        #expect(clue == "____ brought them together.")
     }
 
     @Test func reviewCardHidesUnavailableOrUnrelatedContext() {
